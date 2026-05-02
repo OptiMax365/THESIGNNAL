@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#025f3b">
+    <title>Ultimate Design Studio - Mobile Optimized</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <style>
+        /* =========================
+        GLOBAL RESET & MOBILE OPTIMIZATION
+        ========================= */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
+        }
+
+        /* Allow text input selection */
+        input, textarea, .fabric-editing *, [contenteditable="true"] {
+            user-select: text !important;
+            -webkit-user-select: text !important;
+            touch-action: auto !important;
+        }
+
+        /* =========================
+        BODY / APP LAYOUT
+        ========================= */
+        body {
+            background: radial-gradient(circle at center, #ffffff, #f8f9fa 70%);
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: -webkit-fill-available;
+            overflow: hidden;
+            position: fixed;
+            width: 100vw;
+            max-width: 100vw;
+            overscroll-behavior: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* =========================
+        TOPBAR - SINGLE HORIZONTAL SCROLLABLE BAR
+        ========================= */
+        .topbar {
+            position: fixed;
+            top: env(safe-area-inset-top);
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: linear-gradient(135deg, #025f3b 0%, #037a4d 100%);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            padding: 8px 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        
+        .topbar.hidden {
+            transform: translateY(-100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Horizontal scroll container - MAIN FIX */
+        .topbar-scroll {
+            display: flex;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding: 4px 8px;
+            gap: 8px;
+            width: 100%;
+            min-height: 44px;
+        }
+        
+        .topbar-scroll::-webkit-scrollbar {
+            display: none;
+            height: 0;
+            width: 0;
+        }
+
+        /* Tool groups within scroll */
+        .tool-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 12px;
+            scroll-snap-align: start;
+            flex-shrink: 0;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .tool-group-title {
+            font-size: 10px;
+            color: rgba(255,255,255,0.9);
+            font-weight: 600;
+            margin-right: 4px;
+            white-space: nowrap;
+            opacity: 0.95;
+        }
+
+        /* Universal button styling for mobile */
+        .topbar-btn {
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            min-height: 36px;
+            min-width: 36px;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: all 0.15s ease;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: rgba(255,255,255,0.2);
+        }
+        
+        .topbar-btn:active {
+            transform: scale(0.96);
+            background: linear-gradient(135deg, #219653, #27ae60);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        /* Color picker buttons */
+        .color-btn {
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 10px !important;
+            border: 2px solid rgba(255,255,255,0.4) !important;
+            padding: 0 !important;
+            background: linear-gradient(135deg, #667eea, #764ba2) !important;
+            position: relative !important;
+            overflow: hidden !important;
+            flex-shrink: 0 !important;
+        }
+        
+        .color-btn input[type="color"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            padding: 0;
+            border: none;
+            top: 0;
+            left: 0;
+        }
+        
+        .color-btn::after {
+            content: "✦";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+            pointer-events: none;
+        }
+
+        /* Compact dropdown for fonts */
+        .dropdown-wrapper {
+            position: relative;
+            min-width: 90px;
+        }
+        
+        .dropdown-trigger {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 8px 24px 8px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            white-space: nowrap;
+            position: relative;
+        }
+        
+        .dropdown-trigger::after {
+            content: "▼";
+            position: absolute;
+            right: 8px;
+            font-size: 9px;
+            opacity: 0.9;
+        }
+        
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #025f3b;
+            border-radius: 10px;
+            margin-top: 6px;
+            z-index: 99999;
+            max-height: 180px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            display: none;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+            min-width: 130px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .dropdown-menu.active {
+            display: block;
+        }
+        
+        .dropdown-menu div {
+            padding: 9px 14px;
+            cursor: pointer;
+            color: white;
+            font-size: 12px;
+            white-space: nowrap;
+            transition: background 0.15s;
+        }
+        
+        .dropdown-menu div:active,
+        .dropdown-menu div:hover {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+        }
+
+        /* Canvas size inputs - integrated into scroll */
+        .size-input-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 6px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+        
+        .size-input-group label {
+            font-size: 10px;
+            color: rgba(255,255,255,0.95);
+            font-weight: 600;
+        }
+        
+        .size-input-group input {
+            width: 46px;
+            padding: 5px 4px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.3);
+            font-size: 11px;
+            height: 28px;
+            text-align: center;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            font-weight: 500;
+        }
+        
+        .size-input-group input:focus {
+            outline: none;
+            border-color: #00ff6a;
+            background: rgba(255,255,255,0.25);
+        }
+
+        /* Zoom controls */
+        .zoom-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 6px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+        
+        .zoom-display {
+            font-size: 11px;
+            color: rgba(255,255,255,0.95);
+            min-width: 42px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        /* Scroll indicator */
+        .scroll-hint {
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 2px;
+            animation: pulse 2s infinite;
+            pointer-events: none;
+            display: none;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        /* =========================
+        WORKSPACE & CANVAS AREA - FIXED RENDERING
+        ========================= */
+        .workspace {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            margin-top: calc(60px + env(safe-area-inset-top));
+            width: 100%;
+            background: #f0f2f5;
+        }
+
+        /* Canvas container - CRITICAL FIX FOR VISIBILITY */
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: none;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            background: white;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.12), 0 1px 8px rgba(0,0,0,0.08);
+            border-radius: 8px;
+            overflow: visible;
+            touch-action: none;
+            transform-origin: center center;
+            will-change: transform;
+        }
+
+        canvas {
+            display: block;
+            touch-action: none;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        /* Canvas drag handle */
+        .canvas-handle {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #00d67a, #00b366);
+            color: #0a1a12;
+            padding: 7px 22px;
+            border-radius: 24px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: grab;
+            box-shadow: 0 4px 16px rgba(0,214,122,0.4), 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 15;
+            white-space: nowrap;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            touch-action: none;
+        }
+        
+        .canvas-handle::before { 
+            content: "⋮⋮"; 
+            font-size: 14px; 
+            letter-spacing: 1px;
+        }
+        
+        .canvas-handle:active {
+            cursor: grabbing;
+            background: linear-gradient(135deg, #00b366, #009955);
+        }
+
+        /* Grid overlay */
+        #grid-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0.25;
+            display: none;
+        }
+
+        /* =========================
+        STATUS BAR
+        ========================= */
+        .statusbar {
+            position: fixed;
+            bottom: env(safe-area-inset-bottom);
+            left: 0;
+            right: 0;
+            padding: 6px 14px;
+            border-top: 1px solid rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            background: linear-gradient(135deg, #025f3b, #037a4d);
+            color: rgba(255,255,255,0.95);
+            z-index: 1000;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            min-height: 34px;
+        }
+        
+        .statusbar.hidden {
+            transform: translateY(100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* =========================
+        MASTER SWITCH (Floating Action Button)
+        ========================= */
+        #masterSwitch {
+            width: 54px;
+            height: 54px;
+            background: radial-gradient(circle, #00ff88, #00cc66);
+            border: 3px solid rgba(255,255,255,0.4);
+            border-radius: 50%;
+            position: fixed;
+            bottom: calc(48px + env(safe-area-inset-bottom));
+            right: 24px;
+            cursor: pointer;
+            z-index: 999999;
+            box-shadow: 0 6px 24px rgba(0,204,102,0.5), 
+                        0 3px 12px rgba(0,0,0,0.2),
+                        inset 0 0 20px rgba(255,255,255,0.25);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        
+        #masterSwitch:active {
+            transform: scale(0.94);
+            box-shadow: 0 4px 18px rgba(0,204,102,0.6), 
+                        0 2px 8px rgba(0,0,0,0.25);
+        }
+        
+        #masterSwitch svg {
+            width: 24px;
+            height: 24px;
+            fill: #0a1a12;
+            pointer-events: none;
+        }
+
+        /* =========================
+        RESPONSIVE BREAKPOINTS
+        ========================= */
+        
+        /* Mobile: < 768px - HIDE SIDEBAR, SHOW ALL IN TOPBAR */
+        @media (max-width: 767px) {
+            .sidebar {
+                display: none !important;
+            }
+            
+            .workspace {
+                margin-left: 0 !important;
+            }
+            
+            .topbar-scroll {
+                padding: 4px 6px;
+            }
+            
+            .tool-group {
+                padding: 5px 8px;
+                gap: 5px;
+            }
+            
+            .topbar-btn {
+                padding: 7px 10px;
+                font-size: 11px;
+                min-height: 34px;
+            }
+            
+            .color-btn {
+                width: 34px !important;
+                height: 34px !important;
+            }
+            
+            .size-input-group input {
+                width: 42px;
+                font-size: 10px;
+                height: 26px;
+            }
+            
+            .zoom-display {
+                font-size: 10px;
+                min-width: 38px;
+            }
+            
+            .scroll-hint {
+                display: block;
+            }
+            
+            #masterSwitch {
+                right: 16px;
+                bottom: calc(42px + env(safe-area-inset-bottom));
+                width: 50px;
+                height: 50px;
+            }
+        }
+        
+        /* Desktop: >= 768px - SHOW SIDEBAR OPTION */
+        @media (min-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: calc(60px + env(safe-area-inset-top));
+                left: 0;
+                width: 280px;
+                height: calc(100vh - 60px - env(safe-area-inset-top) - 34px - env(safe-area-inset-bottom));
+                background: linear-gradient(135deg, #025f3b, #037a4d);
+                color: white;
+                z-index: 900;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                padding: 16px 0;
+                transition: transform 0.3s ease, opacity 0.3s ease;
+                box-shadow: 2px 0 20px rgba(0,0,0,0.1);
+            }
+            
+            .sidebar.hidden {
+                transform: translateX(-100%);
+                opacity: 0;
+                pointer-events: none;
+            }
+            
+            .workspace {
+                margin-left: 280px;
+            }
+            
+            .workspace.expanded {
+                margin-left: 0;
+            }
+            
+            .sidebar h3 {
+                margin: 16px 0 10px;
+                padding: 0 20px;
+                font-size: 14px;
+                font-weight: 600;
+                color: rgba(255,255,255,0.95);
+            }
+            
+            .sidebar-btn {
+                width: calc(100% - 40px);
+                margin: 6px 20px;
+                padding: 11px 14px;
+                border-radius: 10px;
+                border: none;
+                background: linear-gradient(135deg, #27ae60, #2ecc71);
+                color: white;
+                font-weight: 600;
+                cursor: pointer;
+                font-size: 13px;
+                min-height: 42px;
+                transition: all 0.15s ease;
+            }
+            
+            .sidebar-btn:active {
+                transform: scale(0.98);
+                background: linear-gradient(135deg, #219653, #27ae60);
+            }
+            
+            .color-row {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 8px 20px;
+                margin: 4px 0;
+            }
+            
+            .color-row label {
+                color: rgba(255,255,255,0.9);
+                font-size: 12px;
+                min-width: 80px;
+            }
+            
+            .sidebar-color-btn {
+                width: 40px;
+                height: 40px;
+                border-radius: 10px;
+                border: 2px solid rgba(255,255,255,0.4);
+                cursor: pointer;
+                padding: 0;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                position: relative;
+                overflow: hidden;
+                flex-shrink: 0;
+            }
+            
+            .sidebar-color-btn input[type="color"] {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                opacity: 0;
+                cursor: pointer;
+            }
+            
+            .sidebar-color-btn::after {
+                content: "✦";
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                color: white;
+                font-size: 18px;
+                font-weight: bold;
+                text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+                pointer-events: none;
+            }
+            
+            .color-divider {
+                height: 1px;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+                margin: 14px 20px;
+            }
+            
+            .apply-btn {
+                padding: 7px 16px;
+                background: linear-gradient(135deg, #27ae60, #2ecc71);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-weight: 600;
+                cursor: pointer;
+                font-size: 11px;
+                min-height: 32px;
+                flex-shrink: 0;
+            }
+            
+            .apply-btn:active {
+                transform: scale(0.97);
+            }
+            
+            .desktop-only {
+                display: flex !important;
+            }
+            
+            .mobile-only {
+                display: none !important;
+            }
+        }
+        
+        /* Large desktop: >= 1200px */
+        @media (min-width: 1200px) {
+            .topbar-scroll {
+                justify-content: center;
+            }
+            
+            .tool-group {
+                padding: 6px 12px;
+            }
+        }
+
+        /* Touch device optimizations */
+        @media (hover: none) and (pointer: coarse) {
+            .topbar-btn,
+            .dropdown-trigger,
+            .color-btn,
+            .sidebar-btn,
+            .apply-btn,
+            .sidebar-color-btn {
+                min-height: 44px !important;
+                min-width: 44px !important;
+            }
+            
+            .size-input-group input {
+                min-height: 36px;
+                font-size: 13px;
+            }
+            
+            .dropdown-trigger {
+                padding: 8px 28px 8px 14px;
+                font-size: 13px;
+            }
+        }
+
+        /* Prevent pull-to-refresh on mobile canvas area */
+        .canvas-container {
+            overscroll-behavior: contain;
+        }
+        
+        /* Visual feedback for selected objects */
+        .fabric-object--selected {
+            stroke-width: 3px !important;
+            stroke: #00d67a !important;
+            strokeDashArray: none !important;
+        }
+        
+        /* Text editing mode */
+        .canvas-wrapper.fabric-editing {
+            pointer-events: none;
+        }
+        .canvas-wrapper.fabric-editing canvas {
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- SINGLE TOPBAR WITH HORIZONTAL SCROLL - ALL CONTROLS -->
+    <div class="topbar" id="topbar">
+        <div class="topbar-scroll" id="topbarScroll">
+            <!-- OBJECT TOOLS -->
+            <div class="tool-group">
+                <span class="tool-group-title">Add</span>
+                <button class="topbar-btn" onclick="addText()">✏️ Text</button>
+                <button class="topbar-btn" onclick="addRectangle()">▭ Rect</button>
+                <button class="topbar-btn" onclick="addCircle()">◯ Circle</button>
+                <button class="topbar-btn" onclick="addTriangle()">△ Triangle</button>
+                <button class="topbar-btn" onclick="triggerImageUpload()">🖼️ Image</button>
+            </div>
+            
+            <!-- CANVAS CONTROLS -->
+            <div class="tool-group">
+                <span class="tool-group-title">Canvas</span>
+                <button class="topbar-btn" onclick="toggleDragMode()">🖐️ Pan</button>
+                <button class="topbar-btn" onclick="deleteSelected()">🗑️ Del</button>
+                <button class="topbar-btn" onclick="bringForward()">⬆️ Up</button>
+                <button class="topbar-btn" onclick="sendBackward()">⬇️ Down</button>
+                <button class="topbar-btn" onclick="alignCenter()">⊙ Center</button>
+                <button class="topbar-btn" onclick="toggleGrid()"># Grid</button>
+            </div>
+            
+            <!-- CANVAS SIZE (Integrated) -->
+            <div class="tool-group size-input-group">
+                <span class="tool-group-title">Size</span>
+                <label>W:</label>
+                <input type="number" id="canvasWidth" value="1080" min="100" max="4000" onchange="resizeCanvas()">
+                <label>H:</label>
+                <input type="number" id="canvasHeight" value="1920" min="100" max="4000" onchange="resizeCanvas()">
+                <button class="topbar-btn" style="padding:6px 10px;font-size:10px;" onclick="resizeCanvas()">Apply</button>
+            </div>
+            
+            <!-- BACKGROUND COLORS -->
+            <div class="tool-group">
+                <span class="tool-group-title">BG</span>
+                <div class="color-btn" title="Workspace Background">
+                    <input type="color" id="mainBgColor" value="#f0f2f5" onchange="applyMainBg()">
+                </div>
+                <div class="color-btn" title="Canvas Background">
+                    <input type="color" id="canvasBgColor" value="#ffffff" onchange="applyCanvasBg()">
+                </div>
+            </div>
+            
+            <!-- TEXT SETTINGS -->
+            <div class="tool-group">
+                <span class="tool-group-title">Text</span>
+                <div class="dropdown-wrapper">
+                    <div class="dropdown-trigger" onclick="toggleDropdown('fontDropdown')">Arial</div>
+                    <div class="dropdown-menu" id="fontDropdown">
+                        <div onclick="setFont('Arial')">Arial</div>
+                        <div onclick="setFont('Helvetica')">Helvetica</div>
+                        <div onclick="setFont('Times New Roman')">Times New Roman</div>
+                        <div onclick="setFont('Georgia')">Georgia</div>
+                        <div onclick="setFont('Courier New')">Courier New</div>
+                        <div onclick="setFont('Impact')">Impact</div>
+                        <div onclick="setFont('Verdana')">Verdana</div>
+                        <div onclick="setFont('Tahoma')">Tahoma</div>
+                        <div onclick="setFont('Trebuchet MS')">Trebuchet MS</div>
+                        <div onclick="setFont('Comic Sans MS')">Comic Sans MS</div>
+                    </div>
+                </div>
+                <input type="number" id="fontSize" value="48" min="8" max="300" onchange="changeFontSize()" style="width:46px;height:28px;font-size:11px;text-align:center;border-radius:8px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.15);color:white;">
+                <div class="color-btn" title="Text Color">
+                    <input type="color" id="textColor" value="#000000" onchange="applyTextColor()">
+                </div>
+            </div>
+            
+            <!-- SHAPE STYLING -->
+            <div class="tool-group">
+                <span class="tool-group-title">Style</span>
+                <div class="color-btn" title="Fill Color">
+                    <input type="color" id="shapeFill" value="#4CAF50" onchange="applyShapeStyle()">
+                </div>
+                <div class="color-btn" title="Border Color">
+                    <input type="color" id="shapeStroke" value="#000000" onchange="applyShapeStyle()">
+                </div>
+                <div class="color-btn" title="Selection Border">
+                    <input type="color" id="selectionColor" value="#00d67a" onchange="applySelectionStyle()">
+                </div>
+            </div>
+            
+            <!-- ZOOM & EXPORT -->
+            <div class="tool-group zoom-group">
+                <span class="tool-group-title">View</span>
+                <button class="topbar-btn" style="padding:6px 10px;font-size:14px;font-weight:bold;" onclick="zoomOut()">−</button>
+                <span class="zoom-display" id="zoomDisplay">100%</span>
+                <button class="topbar-btn" style="padding:6px 10px;font-size:14px;font-weight:bold;" onclick="zoomIn()">+</button>
+                <button class="topbar-btn" style="padding:6px 8px;font-size:10px;" onclick="resetZoom()">↺</button>
+                <button class="topbar-btn" style="padding:6px 10px;font-size:11px;" onclick="downloadPNG()">💾 Export</button>
+            </div>
+            
+            <!-- DESKTOP: Toggle Sidebar -->
+            <div class="tool-group desktop-only">
+                <button class="topbar-btn" onclick="toggleSidebar()">☰ Panel</button>
+            </div>
+        </div>
+        
+        <!-- Scroll hint indicator -->
+        <div class="scroll-hint"></div>
+    </div>
+
+    <!-- WORKSPACE -->
+    <div class="workspace" id="workspace">
+        <!-- SIDEBAR (Desktop Only) -->
+        <div class="sidebar" id="sidebar">
+            <h3>🎨 Backgrounds</h3>
+            <div class="color-row">
+                <label>Workspace</label>
+                <div class="sidebar-color-btn">
+                    <input type="color" id="sidebarMainBg" value="#f0f2f5" onchange="applyMainBg()">
+                </div>
+                <button class="apply-btn" onclick="applyMainBg()">Apply</button>
+            </div>
+            <div class="color-row">
+                <label>Canvas</label>
+                <div class="sidebar-color-btn">
+                    <input type="color" id="sidebarCanvasBg" value="#ffffff" onchange="applyCanvasBg()">
+                </div>
+                <button class="apply-btn" onclick="applyCanvasBg()">Apply</button>
+            </div>
+            
+            <div class="color-divider"></div>
+            
+            <h3>✏️ Text Settings</h3>
+            <div class="color-row">
+                <label>Color</label>
+                <div class="sidebar-color-btn">
+                    <input type="color" id="sidebarTextColor" value="#000000" onchange="applyTextColor()">
+                </div>
+                <button class="apply-btn" onclick="applyTextColor()">Apply</button>
+            </div>
+            <div class="color-row">
+                <label>Font Size</label>
+                <input type="number" id="sidebarFontSize" value="48" min="8" max="300" onchange="changeFontSize()" style="width:60px;padding:6px;border-radius:8px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.15);color:white;text-align:center;">
+            </div>
+            
+            <div class="color-divider"></div>
+            
+            <h3>🔷 Shape Style</h3>
+            <div class="color-row">
+                <label>Fill</label>
+                <div class="sidebar-color-btn">
+                    <input type="color" id="sidebarShapeFill" value="#4CAF50" onchange="applyShapeStyle()">
+                </div>
+                <button class="apply-btn" onclick="applyShapeStyle()">Apply</button>
+            </div>
+            <div class="color-row">
+                <label>Border</label>
+                <div class="sidebar-color-btn">
+                    <input type="color" id="sidebarShapeStroke" value="#000000" onchange="applyShapeStyle()">
+                </div>
+                <button class="apply-btn" onclick="applyShapeStyle()">Apply</button>
+            </div>
+            
+            <div class="color-divider"></div>
+            
+            <h3>⚡ Quick Actions</h3>
+            <button class="sidebar-btn" onclick="addText()">Add Text</button>
+            <button class="sidebar-btn" onclick="addRectangle()">Add Rectangle</button>
+            <button class="sidebar-btn" onclick="addCircle()">Add Circle</button>
+            <button class="sidebar-btn" onclick="triggerImageUpload()">Upload Image</button>
+            <button class="sidebar-btn" onclick="toggleGrid()">Toggle Grid</button>
+            <button class="sidebar-btn" onclick="alignCenter()">Center Object</button>
+            <button class="sidebar-btn" onclick="downloadPNG()">Export as PNG</button>
+            
+            <div class="color-divider"></div>
+            
+            <h3>ℹ️ Canvas Info</h3>
+            <div style="padding:0 20px;font-size:12px;line-height:1.8;color:rgba(255,255,255,0.9);">
+                Size: <span id="info-size" style="color:#00ff88;">1080 × 1920</span><br>
+                Zoom: <span id="info-zoom" style="color:#00ff88;">100%</span><br>
+                Objects: <span id="info-objects" style="color:#00ff88;">0</span><br>
+                Selected: <span id="info-selected" style="color:#ff6b9d;">None</span>
+            </div>
+        </div>
+
+        <!-- CANVAS AREA - FIXED VISIBILITY -->
+        <div class="canvas-container" id="canvasContainer">
+            <div class="canvas-wrapper" id="canvasWrapper">
+                <div class="canvas-handle" id="canvasHandle">DRAG CANVAS</div>
+                <canvas id="designCanvas"></canvas>
+            </div>
+            <canvas id="grid-overlay"></canvas>
+        </div>
+    </div>
+
+    <!-- STATUS BAR -->
+    <div class="statusbar" id="statusbar">
+        <span id="selectedInfo">No object selected</span>
+        <span id="canvasInfo">1080 × 1920 • 100%</span>
+        <span id="modeInfo">Select Mode</span>
+    </div>
+
+    <!-- MASTER SWITCH (Floating Toggle) -->
+    <div id="masterSwitch" title="Toggle UI Panels">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+    </div>
+
+    <!-- Hidden file input for images -->
+    <input type="file" id="imageInput" accept="image/*" style="display:none">
+
+<script>
+    // =========================
+    // GLOBAL VARIABLES & SETUP
+    // =========================
+    let CW = 1080, CH = 1920;
+    let zoomLevel = 1;
+    let dragMode = false;
+    let gridVisible = false;
+    let isUIVisible = true;
+    let isDraggingCanvas = false;
+    let dragStart = { x: 0, y: 0 };
+    let wrapperStart = { left: 0, top: 0 };
+    
+    // Device detection
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 767;
+    
+    // Initialize Fabric Canvas - CRITICAL FIX FOR VISIBILITY
+    const canvas = new fabric.Canvas('designCanvas', {
+        width: CW,
+        height: CH,
+        backgroundColor: '#ffffff',
+        preserveObjectStacking: true,
+        enableRetinaScaling: true,
+        skipOffscreen: true,
+        selection: true,
+        borderColor: '#00d67a',
+        borderScaleFactor: 3,
+        cornerColor: '#00d67a',
+        cornerStrokeColor: '#ffffff',
+        cornerSize: isMobile ? 16 : 12,
+        transparentCorners: false,
+        centeredScaling: true,
+        uniformScaling: true,
+        stopContextMenu: true,
+        hoverCursor: 'move',
+        moveCursor: 'grab',
+        defaultCursor: 'default'
+    });
+
+    // DOM References
+    const canvasWrapper = document.getElementById('canvasWrapper');
+    const canvasContainer = document.getElementById('canvasContainer');
+    const canvasHandle = document.getElementById('canvasHandle');
+    const masterSwitch = document.getElementById('masterSwitch');
+    const sidebar = document.getElementById('sidebar');
+    const topbar = document.getElementById('topbar');
+    const statusbar = document.getElementById('statusbar');
+    const workspace = document.getElementById('workspace');
+    const gridOverlay = document.getElementById('grid-overlay');
+    const imageInput = document.getElementById('imageInput');
+    const topbarScroll = document.getElementById('topbarScroll');
+
+    // =========================
+    // CANVAS INITIALIZATION & POSITIONING - MAIN FIX
+    // =========================
+    function initCanvas() {
+        // Set initial wrapper dimensions
+        canvasWrapper.style.width = CW + 'px';
+        canvasWrapper.style.height = CH + 'px';
+        
+        // Center canvas in viewport
+        centerCanvas();
+        
+        // Update info displays
+        updateCanvasInfo();
+        updateObjectInfo();
+        
+        // Draw initial grid if needed
+        if (gridVisible) drawGrid();
+        
+        // Focus container for keyboard events
+        canvasContainer.tabIndex = 0;
+        canvasContainer.focus();
+    }
+
+    function centerCanvas() {
+        const containerRect = canvasContainer.getBoundingClientRect();
+        const wrapperRect = canvasWrapper.getBoundingClientRect();
+        
+        // Calculate centered position
+        const left = (containerRect.width - wrapperRect.width) / 2;
+        const top = (containerRect.height - wrapperRect.height) / 2;
+        
+        canvasWrapper.style.left = Math.max(20, left) + 'px';
+        canvasWrapper.style.top = Math.max(20, top) + 'px';
+        canvasWrapper.style.transform = 'none';
+    }
+
+    function resizeCanvas() {
+        CW = parseInt(document.getElementById('canvasWidth').value) || 1080;
+        CH = parseInt(document.getElementById('canvasHeight').value) || 1920;
+        
+        // Update canvas dimensions
+        canvas.setDimensions({ width: CW, height: CH });
+        
+        // Update wrapper
+        canvasWrapper.style.width = CW + 'px';
+        canvasWrapper.style.height = CH + 'px';
+        
+        // Re-center
+        centerCanvas();
+        
+        // Update displays
+        document.getElementById('info-size').textContent = `${CW} × ${CH}`;
+        document.getElementById('canvasInfo').textContent = `${CW} × ${CH} • ${Math.round(zoomLevel * 100)}%`;
+        
+        // Redraw grid if visible
+        if (gridVisible) drawGrid();
+        
+        canvas.renderAll();
+    }
+
+    // =========================
+    // ZOOM FUNCTIONS
+    // =========================
+    function setZoom(newZoom, centerX, centerY) {
+        zoomLevel = Math.max(0.1, Math.min(5, newZoom));
+        
+        // If center point provided (for pinch zoom), zoom towards it
+        if (centerX !== undefined && centerY !== undefined) {
+            const rect = canvasWrapper.getBoundingClientRect();
+            const canvasX = (centerX - rect.left) / zoomLevel;
+            const canvasY = (centerY - rect.top) / zoomLevel;
+            canvas.zoomToPoint({ x: canvasX, y: canvasY }, zoomLevel);
+        } else {
+            canvas.setZoom(zoomLevel);
+        }
+        
+        // Update wrapper dimensions
+        canvasWrapper.style.width = (CW * zoomLevel) + 'px';
+        canvasWrapper.style.height = (CH * zoomLevel) + 'px';
+        
+        // Update displays
+        const zoomPercent = Math.round(zoomLevel * 100);
+        document.getElementById('zoomDisplay').textContent = zoomPercent + '%';
+        document.getElementById('info-zoom').textContent = zoomPercent + '%';
+        document.getElementById('canvasInfo').textContent = `${CW} × ${CH} • ${zoomPercent}%`;
+        
+        // Redraw grid if visible
+        if (gridVisible) drawGrid();
+        
+        // Re-center if needed
+        if (!centerX) centerCanvas();
+    }
+
+    function zoomIn() { setZoom(zoomLevel * 1.25); }
+    function zoomOut() { setZoom(zoomLevel / 1.25); }
+    function resetZoom() { 
+        setZoom(1); 
+        centerCanvas();
+    }
+
+    // =========================
+    // GRID SYSTEM
+    // =========================
+    function drawGrid() {
+        const ctx = gridOverlay.getContext('2d');
+        const width = CW * zoomLevel;
+        const height = CH * zoomLevel;
+        
+        gridOverlay.width = width;
+        gridOverlay.height = height;
+        gridOverlay.style.width = width + 'px';
+        gridOverlay.style.height = height + 'px';
+        
+        ctx.clearRect(0, 0, width, height);
+        ctx.strokeStyle = 'rgba(0, 214, 122, 0.15)';
+        ctx.lineWidth = 1;
+        
+        const step = 40 * zoomLevel;
+        
+        // Vertical lines
+        for (let x = 0; x <= width; x += step) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, height);
+            ctx.stroke();
+        }
+        
+        // Horizontal lines
+        for (let y = 0; y <= height; y += step) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(width, y);
+            ctx.stroke();
+        }
+    }
+
+    function toggleGrid() {
+        gridVisible = !gridVisible;
+        gridOverlay.style.display = gridVisible ? 'block' : 'none';
+        if (gridVisible) drawGrid();
+    }
+
+    // =========================
+    // BACKGROUND COLORS
+    // =========================
+    function applyMainBg() {
+        const color = document.getElementById('mainBgColor').value;
+        document.getElementById('sidebarMainBg').value = color;
+        canvasContainer.style.background = color;
+    }
+
+    function applyCanvasBg() {
+        const color = document.getElementById('canvasBgColor').value;
+        document.getElementById('sidebarCanvasBg').value = color;
+        canvas.setBackgroundColor(color, canvas.renderAll.bind(canvas));
+    }
+
+    // =========================
+    // TEXT & SHAPE STYLING
+    // =========================
+    function applyTextColor() {
+        const color = document.getElementById('textColor').value;
+        document.getElementById('sidebarTextColor').value = color;
+        
+        const obj = canvas.getActiveObject();
+        if (obj && ['i-text', 'text', 'textbox'].includes(obj.type)) {
+            obj.set('fill', color);
+            canvas.requestRenderAll();
+            updateObjectInfo();
+        }
+    }
+
+    function applyShapeStyle() {
+        const fill = document.getElementById('shapeFill').value;
+        const stroke = document.getElementById('shapeStroke').value;
+        document.getElementById('sidebarShapeFill').value = fill;
+        document.getElementById('sidebarShapeStroke').value = stroke;
+        
+        const obj = canvas.getActiveObject();
+        if (obj && !['i-text', 'text', 'textbox', 'image'].includes(obj.type)) {
+            obj.set({ fill: fill, stroke: stroke, strokeWidth: 2 });
+            canvas.requestRenderAll();
+            updateObjectInfo();
+        }
+    }
+
+    function applySelectionStyle() {
+        const color = document.getElementById('selectionColor').value;
+        canvas.forEachObject(obj => {
+            obj.set({
+                borderColor: color,
+                cornerColor: color,
+                cornerStrokeColor: '#ffffff'
+            });
+        });
+        canvas.renderAll();
+    }
+
+    function changeFontSize() {
+        const size = parseInt(document.getElementById('fontSize').value) || 48;
+        document.getElementById('sidebarFontSize').value = size;
+        
+        const obj = canvas.getActiveObject();
+        if (obj && ['i-text', 'text', 'textbox'].includes(obj.type)) {
+            obj.set('fontSize', size);
+            canvas.requestRenderAll();
+            updateObjectInfo();
+        }
+    }
+
+    function setFont(font) {
+        // Update dropdown display
+        document.querySelectorAll('.dropdown-trigger').forEach(el => {
+            el.innerHTML = font + ' <span style="margin-left:auto">▼</span>';
+        });
+        
+        // Close all dropdowns
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            menu.classList.remove('active');
+        });
+        
+        // Apply to selected text object
+        const obj = canvas.getActiveObject();
+        if (obj && ['i-text', 'text', 'textbox'].includes(obj.type)) {
+            obj.set('fontFamily', font);
+            canvas.renderAll();
+            updateObjectInfo();
+        }
+    }
+
+    function toggleDropdown(id) {
+        const menu = document.getElementById(id);
+        const isActive = menu.classList.contains('active');
+        
+        // Close all dropdowns first
+        document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('active'));
+        
+        // Toggle clicked dropdown
+        if (!isActive) {
+            menu.classList.add('active');
+        }
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.dropdown-wrapper')) {
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                menu.classList.remove('active');
+            });
+        }
+    });
+
+    // =========================
+    // OBJECT CREATION FUNCTIONS
+    // =========================
+    function addText() {
+        const font = document.querySelector('.dropdown-trigger')?.innerText.replace(' ▼', '').trim() || 'Arial';
+        const size = parseInt(document.getElementById('fontSize').value) || 48;
+        const color = document.getElementById('textColor').value;
+        
+        const text = new fabric.IText('Double-tap to edit', {
+            left: CW / 2,
+            top: CH / 2,
+            fontSize: size,
+            fontFamily: font,
+            fill: color,
+            originX: 'center',
+            originY: 'center',
+            cornerSize: isMobile ? 16 : 12,
+            selectable: !dragMode,
+            evented: !dragMode
+        });
+        
+        canvas.add(text);
+        canvas.setActiveObject(text);
+        canvas.requestRenderAll();
+        updateObjectInfo();
+    }
+
+    function addRectangle() {
+        const fill = document.getElementById('shapeFill').value;
+        const stroke = document.getElementById('shapeStroke').value;
+        
+        const rect = new fabric.Rect({
+            left: CW / 2,
+            top: CH / 2,
+            width: 200,
+            height: 120,
+            fill: fill,
+            stroke: stroke,
+            strokeWidth: 2,
+            originX: 'center',
+            originY: 'center',
+            cornerSize: isMobile ? 16 : 12,
+            selectable: !dragMode,
+            evented: !dragMode
+        });
+        
+        canvas.add(rect);
+        canvas.setActiveObject(rect);
+        canvas.requestRenderAll();
+        updateObjectInfo();
+    }
+
+    function addCircle() {
+        const fill = document.getElementById('shapeFill').value;
+        const stroke = document.getElementById('shapeStroke').value;
+        
+        const circle = new fabric.Circle({
+            left: CW / 2,
+            top: CH / 2,
+            radius: 70,
+            fill: fill,
+            stroke: stroke,
+            strokeWidth: 2,
+            originX: 'center',
+            originY: 'center',
+            cornerSize: isMobile ? 16 : 12,
+            selectable: !dragMode,
+            evented: !dragMode
+        });
+        
+        canvas.add(circle);
+        canvas.setActiveObject(circle);
+        canvas.requestRenderAll();
+        updateObjectInfo();
+    }
+
+    function addTriangle() {
+        const fill = document.getElementById('shapeFill').value;
+        const stroke = document.getElementById('shapeStroke').value;
+        
+        const triangle = new fabric.Triangle({
+            left: CW / 2,
+            top: CH / 2,
+            width: 140,
+            height: 140,
+            fill: fill,
+            stroke: stroke,
+            strokeWidth: 2,
+            originX: 'center',
+            originY: 'center',
+            cornerSize: isMobile ? 16 : 12,
+            selectable: !dragMode,
+            evented: !dragMode
+        });
+        
+        canvas.add(triangle);
+        canvas.setActiveObject(triangle);
+        canvas.requestRenderAll();
+        updateObjectInfo();
+    }
+
+    function triggerImageUpload() {
+        imageInput.click();
+    }
+
+    imageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file || !file.type.match('image.*')) {
+            alert('Please select a valid image file');
+            this.value = '';
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            fabric.Image.fromURL(ev.target.result, function(img) {
+                // Scale image to fit canvas reasonably
+                const maxW = CW * 0.7;
+                const maxH = CH * 0.7;
+                const scale = Math.min(maxW / img.width, maxH / img.height, 1);
+                
+                const borderColor = document.getElementById('selectionColor').value;
+                
+                img.set({
+                    left: CW / 2,
+                    top: CH / 2,
+                    originX: 'center',
+                    originY: 'center',
+                    scaleX: scale,
+                    scaleY: scale,
+                    cornerSize: isMobile ? 16 : 12,
+                    borderColor: borderColor,
+                    cornerColor: borderColor,
+                    cornerStrokeColor: '#ffffff',
+                    selectable: !dragMode,
+                    evented: !dragMode
+                });
+                
+                canvas.add(img);
+                canvas.setActiveObject(img);
+                canvas.requestRenderAll();
+                updateObjectInfo();
+                imageInput.value = '';
+            }, { crossOrigin: 'anonymous' });
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // =========================
+    // OBJECT MANAGEMENT
+    // =========================
+    function deleteSelected() {
+        const active = canvas.getActiveObjects();
+        if (active.length) {
+            active.forEach(obj => canvas.remove(obj));
+            canvas.discardActiveObject();
+            canvas.requestRenderAll();
+            updateObjectInfo();
+        }
+    }
+
+    function bringForward() {
+        const obj = canvas.getActiveObject();
+        if (obj) {
+            canvas.bringForward(obj);
+            canvas.requestRenderAll();
+        }
+    }
+
+    function sendBackward() {
+        const obj = canvas.getActiveObject();
+        if (obj) {
+            canvas.sendBackwards(obj);
+            canvas.requestRenderAll();
+        }
+    }
+
+    function alignCenter() {
+        const obj = canvas.getActiveObject();
+        if (obj) {
+            obj.center();
+            obj.setCoords();
+            canvas.requestRenderAll();
+        }
+    }
+
+    function downloadPNG() {
+        // Temporarily hide grid for export
+        const wasVisible = gridVisible;
+        if (wasVisible) {
+            gridOverlay.style.display = 'none';
+        }
+        
+        const dataURL = canvas.toDataURL({
+            format: 'png',
+            quality: 1,
+            multiplier: isMobile ? 1 : 2
+        });
+        
+        const a = document.createElement('a');
+        a.href = dataURL;
+        a.download = 'design-export.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        // Restore grid
+        if (wasVisible) {
+            gridOverlay.style.display = 'block';
+        }
+    }
+
+    // =========================
+    // DRAG MODE & CANVAS PANNING
+    // =========================
+    function toggleDragMode() {
+        dragMode = !dragMode;
+        document.getElementById('modeInfo').textContent = dragMode ? 'Pan Mode' : 'Select Mode';
+        
+        // Update canvas interaction
+        canvas.selection = !dragMode;
+        canvas.forEachObject(obj => {
+            obj.selectable = !dragMode;
+            obj.evented = !dragMode;
+        });
+        
+        // Update cursor
+        canvasWrapper.style.cursor = dragMode ? 'grab' : 'default';
+        
+        // Deselect any active object
+        canvas.discardActiveObject();
+        canvas.requestRenderAll();
+        updateObjectInfo();
+    }
+
+    // Canvas drag handling (mouse)
+    canvasWrapper.addEventListener('mousedown', function(e) {
+        if (!dragMode) return;
+        if (e.target.tagName === 'CANVAS') return;
+        
+        isDraggingCanvas = true;
+        dragStart.x = e.clientX;
+        dragStart.y = e.clientY;
+        
+        const rect = canvasWrapper.getBoundingClientRect();
+        wrapperStart.left = rect.left;
+        wrapperStart.top = rect.top;
+        
+        canvasWrapper.style.cursor = 'grabbing';
+        e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', function(e) {
+        if (!isDraggingCanvas) return;
+        
+        const dx = e.clientX - dragStart.x;
+        const dy = e.clientY - dragStart.y;
+        
+        canvasWrapper.style.left = (wrapperStart.left + dx) + 'px';
+        canvasWrapper.style.top = (wrapperStart.top + dy) + 'px';
+    });
+
+    window.addEventListener('mouseup', function() {
+        if (isDraggingCanvas) {
+            isDraggingCanvas = false;
+            canvasWrapper.style.cursor = dragMode ? 'grab' : 'default';
+        }
+    });
+
+    // Canvas handle drag (touch & mouse)
+    function setupCanvasHandle() {
+        let handleStart = { x: 0, y: 0 };
+        let wrapperStartPos = { left: 0, top: 0 };
+        
+        function startDrag(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+            
+            isDraggingCanvas = true;
+            handleStart.x = clientX;
+            handleStart.y = clientY;
+            
+            const rect = canvasWrapper.getBoundingClientRect();
+            wrapperStartPos.left = rect.left;
+            wrapperStartPos.top = rect.top;
+            
+            canvasWrapper.style.transform = 'none';
+            canvasWrapper.classList.add('dragging');
+        }
+        
+        function onDrag(e) {
+            if (!isDraggingCanvas) return;
+            e.preventDefault();
+            
+            const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+            
+            const dx = clientX - handleStart.x;
+            const dy = clientY - handleStart.y;
+            
+            canvasWrapper.style.left = (wrapperStartPos.left + dx) + 'px';
+            canvasWrapper.style.top = (wrapperStartPos.top + dy) + 'px';
+        }
+        
+        function endDrag() {
+            if (isDraggingCanvas) {
+                isDraggingCanvas = false;
+                canvasWrapper.classList.remove('dragging');
+                canvasWrapper.style.cursor = dragMode ? 'grab' : 'default';
+            }
+        }
+        
+        // Mouse events
+        canvasHandle.addEventListener('mousedown', startDrag);
+        
+        // Touch events
+        canvasHandle.addEventListener('touchstart', startDrag, { passive: false });
+        
+        // Global move/end listeners
+        document.addEventListener('mousemove', onDrag);
+        document.addEventListener('mouseup', endDrag);
+        document.addEventListener('touchmove', onDrag, { passive: false });
+        document.addEventListener('touchend', endDrag);
+        document.addEventListener('touchcancel', endDrag);
+    }
+
+    // =========================
+    // TOUCH & PINCH ZOOM SUPPORT
+    // =========================
+    function setupTouchGestures() {
+        let touchState = {
+            isPinching: false,
+            startDistance: 0,
+            startZoom: 1,
+            lastTouch: 0
+        };
+        
+        function getDistance(touches) {
+            const dx = touches[0].clientX - touches[1].clientX;
+            const dy = touches[0].clientY - touches[1].clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+        
+        canvasContainer.addEventListener('touchstart', function(e) {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                touchState.isPinching = true;
+                touchState.startDistance = getDistance(e.touches);
+                touchState.startZoom = zoomLevel;
+            }
+        }, { passive: false });
+        
+        canvasContainer.addEventListener('touchmove', function(e) {
+            if (touchState.isPinching && e.touches.length === 2) {
+                e.preventDefault();
+                const currentDistance = getDistance(e.touches);
+                const scale = currentDistance / touchState.startDistance;
+                const newZoom = touchState.startZoom * scale;
+                
+                // Calculate center point between fingers
+                const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                
+                setZoom(newZoom, centerX, centerY);
+            }
+        }, { passive: false });
+        
+        canvasContainer.addEventListener('touchend', function(e) {
+            if (touchState.isPinching) {
+                touchState.isPinching = false;
+            }
+        });
+        
+        // Mouse wheel zoom (desktop)
+        canvasContainer.addEventListener('wheel', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                setZoom(zoomLevel * delta, e.clientX, e.clientY);
+            }
+        }, { passive: false });
+    }
+
+    // =========================
+    // MASTER SWITCH (UI Toggle)
+    // =========================
+    function setupMasterSwitch() {
+        let isDragging = false;
+        let hasMoved = false;
+        let startPos = { x: 0, y: 0 };
+        let startOffset = { left: 0, top: 0 };
+        
+        function startDrag(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            isDragging = true;
+            hasMoved = false;
+            
+            const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+            
+            startPos.x = clientX;
+            startPos.y = clientY;
+            startOffset.left = masterSwitch.offsetLeft;
+            startOffset.top = masterSwitch.offsetTop;
+            
+            masterSwitch.style.transition = 'none';
+        }
+        
+        function onDrag(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            
+            const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+            
+            const dx = clientX - startPos.x;
+            const dy = clientY - startPos.y;
+            
+            // Detect if moved significantly (vs tap)
+            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+                hasMoved = true;
+            }
+            
+            // Calculate new position with bounds
+            const maxX = window.innerWidth - 54;
+            const maxY = window.innerHeight - 54;
+            let newLeft = startOffset.left + dx;
+            let newTop = startOffset.top + dy;
+            
+            newLeft = Math.max(12, Math.min(newLeft, maxX));
+            newTop = Math.max(12, Math.min(newTop, maxY));
+            
+            masterSwitch.style.left = newLeft + 'px';
+            masterSwitch.style.top = newTop + 'px';
+        }
+        
+        function endDrag() {
+            if (isDragging) {
+                // Toggle UI only on tap (not drag)
+                if (!hasMoved) {
+                    isUIVisible = !isUIVisible;
+                    
+                    topbar.classList.toggle('hidden', !isUIVisible);
+                    sidebar?.classList.toggle('hidden', !isUIVisible);
+                    statusbar.classList.toggle('hidden', !isUIVisible);
+                    
+                    if (sidebar && window.innerWidth >= 768) {
+                        workspace.classList.toggle('expanded', !isUIVisible);
+                    }
+                }
+                
+                isDragging = false;
+                masterSwitch.style.transition = 'all 0.2s ease';
+            }
+        }
+        
+        // Mouse events
+        masterSwitch.addEventListener('mousedown', startDrag);
+        
+        // Touch events
+        masterSwitch.addEventListener('touchstart', startDrag, { passive: false });
+        
+        // Global listeners
+        document.addEventListener('mousemove', onDrag);
+        document.addEventListener('mouseup', endDrag);
+        document.addEventListener('touchmove', onDrag, { passive: false });
+        document.addEventListener('touchend', endDrag);
+        document.addEventListener('touchcancel', endDrag);
+    }
+
+    // =========================
+    // UI TOGGLE FUNCTIONS
+    // =========================
+    function toggleSidebar() {
+        if (!sidebar) return;
+        sidebar.classList.toggle('hidden');
+        workspace.classList.toggle('expanded');
+        setTimeout(() => {
+            canvas.calcOffset();
+            centerCanvas();
+        }, 300);
+    }
+
+    // =========================
+    // INFO UPDATES
+    // =========================
+    function updateCanvasInfo() {
+        const zoomPercent = Math.round(zoomLevel * 100);
+        document.getElementById('info-size').textContent = `${CW} × ${CH}`;
+        document.getElementById('info-zoom').textContent = zoomPercent + '%';
+        document.getElementById('canvasInfo').textContent = `${CW} × ${CH} • ${zoomPercent}%`;
+        document.getElementById('zoomDisplay').textContent = zoomPercent + '%';
+    }
+
+    function updateObjectInfo() {
+        const obj = canvas.getActiveObject();
+        const count = canvas.getObjects().length;
+        
+        document.getElementById('info-objects').textContent = count;
+        
+        if (obj) {
+            document.getElementById('selectedInfo').textContent = `Selected: ${obj.type}`;
+            document.getElementById('info-selected').textContent = obj.type;
+            
+            // Sync color pickers with selected object
+            if (['i-text', 'text', 'textbox'].includes(obj.type)) {
+                if (obj.fill && typeof obj.fill === 'string') {
+                    document.getElementById('textColor').value = obj.fill;
+                    document.getElementById('sidebarTextColor').value = obj.fill;
+                }
+                if (obj.fontSize) {
+                    document.getElementById('fontSize').value = obj.fontSize;
+                    document.getElementById('sidebarFontSize').value = obj.fontSize;
+                }
+            }
+            
+            if (!['i-text', 'text', 'textbox', 'image'].includes(obj.type)) {
+                if (obj.fill && typeof obj.fill === 'string') {
+                    document.getElementById('shapeFill').value = obj.fill;
+                    document.getElementById('sidebarShapeFill').value = obj.fill;
+                }
+                if (obj.stroke && typeof obj.stroke === 'string') {
+                    document.getElementById('shapeStroke').value = obj.stroke;
+                    document.getElementById('sidebarShapeStroke').value = obj.stroke;
+                }
+            }
+        } else {
+            document.getElementById('selectedInfo').textContent = 'No object selected';
+            document.getElementById('info-selected').textContent = 'None';
+        }
+    }
+
+    // Canvas event listeners for object selection
+    canvas.on('selection:created', updateObjectInfo);
+    canvas.on('selection:updated', updateObjectInfo);
+    canvas.on('selection:cleared', updateObjectInfo);
+    canvas.on('object:modified', updateObjectInfo);
+    canvas.on('object:added', updateObjectInfo);
+
+    // =========================
+    // KEYBOARD SHORTCUTS
+    // =========================
+    document.addEventListener('keydown', function(e) {
+        // Prevent delete/backspace when editing text
+        if (document.activeElement.tagName === 'INPUT' || 
+            document.activeElement.tagName === 'TEXTAREA' ||
+            canvas.getActiveObject()?.isEditing) {
+            return;
+        }
+        
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            deleteSelected();
+        }
+        
+        // Zoom shortcuts
+        if (e.ctrlKey || e.metaKey) {
+            if (e.key === '+' || e.key === '=') {
+                e.preventDefault();
+                zoomIn();
+            } else if (e.key === '-' || e.key === '_') {
+                e.preventDefault();
+                zoomOut();
+            } else if (e.key === '0') {
+                e.preventDefault();
+                resetZoom();
+            }
+        }
+    });
+
+    // =========================
+    // WINDOW RESIZE HANDLING
+    // =========================
+    function handleResize() {
+        // Re-center canvas on resize
+        centerCanvas();
+        updateCanvasInfo();
+        
+        // Adjust master switch position for mobile
+        if (window.innerWidth <= 767) {
+            masterSwitch.style.right = '16px';
+            masterSwitch.style.bottom = 'calc(42px + env(safe-area-inset-bottom))';
+        }
+    }
+
+    // =========================
+    // INITIALIZATION
+    // =========================
+    window.addEventListener('load', function() {
+        // Initialize canvas positioning
+        initCanvas();
+        
+        // Setup interactions
+        setupCanvasHandle();
+        setupTouchGestures();
+        setupMasterSwitch();
+        
+        // Position master switch initially
+        if (isMobile) {
+            masterSwitch.style.right = '16px';
+            masterSwitch.style.bottom = 'calc(42px + env(safe-area-inset-bottom))';
+        } else {
+            masterSwitch.style.right = '24px';
+            masterSwitch.style.bottom = 'calc(48px + env(safe-area-inset-bottom))';
+        }
+        
+        // Event listeners
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', function() {
+            setTimeout(handleResize, 300);
+        });
+        
+        // Close dropdowns on scroll
+        topbarScroll?.addEventListener('scroll', function() {
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                menu.classList.remove('active');
+            });
+        });
+        
+        // Initial info update
+        updateCanvasInfo();
+        updateObjectInfo();
+        
+        console.log('✅ Design Studio initialized - Mobile Optimized');
+    });
+
+    // Prevent pull-to-refresh when interacting with canvas
+    document.addEventListener('touchmove', function(e) {
+        if (e.target.closest('.canvas-container')) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+</script>
+</body>
+</html>
