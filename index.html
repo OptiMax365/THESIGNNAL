@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#025f3b">
+    <title>Ultimate Design Studio</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <style>
+        /* =========================
+        GLOBAL RESET & MOBILE OPTIMIZATION
+        ========================= */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            touch-action: none;
+        }
+
+        /* Allow text input selection */
+        input, textarea, .fabric-editing * {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+            touch-action: auto;
+        }
+
+        /* =========================
+        BODY / APP LAYOUT
+        ========================= */
+        body {
+            background: radial-gradient(circle at center, #ffffff, #ffffff 70%);
+            color: rgb(249, 11, 249);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: -webkit-fill-available;
+            overflow: hidden;
+            position: fixed;
+            width: 100vw;
+            max-width: 100vw;
+            overscroll-behavior: none;
+        }
+
+        /* Shared panel styling */
+        .topbar,
+        .sidebar,
+        .statusbar {
+            background: rgb(2, 95, 59);
+            border-color: rgb(73, 156, 0);
+            box-shadow: 0 0 20px rgba(0, 232, 39, 0.15);
+        }
+
+        /* =========================
+        TOPBAR - MOBILE SCROLLABLE
+        ========================= */
+        .topbar {
+            position: fixed;
+            top: env(safe-area-inset-top);
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: nowrap;
+            padding: 8px 12px;
+            background: rgb(2, 95, 59);
+            transition: transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.3s cubic-bezier(0.4,0,0.2,1);
+            height: auto;
+            min-height: 56px;
+            max-height: 56px;
+            overflow: hidden;
+        }
+        .topbar.hidden { 
+            transform: translateY(-100%); 
+            opacity: 0; 
+            pointer-events: none; 
+        }
+
+        .tool-group {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 6px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 4px 0;
+            align-items: center;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            scroll-snap-type: x mandatory;
+        }
+        .tool-group::-webkit-scrollbar { 
+            display: none; 
+            height: 0;
+            width: 0;
+        }
+        .tool-group::-webkit-scrollbar-thumb { 
+            background: transparent; 
+        }
+
+        .canvas-size-panel {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            background: rgba(0,0,0,0.15);
+            border-radius: 8px;
+            height: 40px;
+            flex-shrink: 0;
+        }
+
+        .canvas-size-panel input {
+            width: 50px;
+            padding: 4px 6px;
+            border-radius: 4px;
+            border: none;
+            font-size: 11px;
+            height: 28px;
+            text-align: center;
+        }
+
+        .canvas-size-panel label {
+            font-size: 10px;
+            color: #fff;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .canvas-size-panel button {
+            padding: 4px 8px;
+            font-size: 10px;
+            height: 28px;
+            white-space: nowrap;
+        }
+
+        .topbar button,
+        .topbar input,
+        .topbar select {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: none;
+            background: linear-gradient(90deg, #27ae60, #2ecc71);
+            color: #fff;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            height: 32px;
+            min-height: 32px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: rgba(255,255,255,0.3);
+        }
+
+        .topbar button:active,
+        .topbar button:hover {
+            background: #4797ff;
+            color: rgb(16, 8, 237);
+            box-shadow: 0 0 15px rgb(13, 255, 0);
+            transform: scale(0.98);
+        }
+
+        /* =========================
+        WORKSPACE
+        ========================= */
+        .workspace {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            margin-top: 56px;
+            margin-top: calc(56px + env(safe-area-inset-top));
+            transition: left 0.3s cubic-bezier(0.4,0,0.2,1);
+            width: 100%;
+        }
+        .workspace.expanded { left: 0; }
+
+        /* =========================
+        SIDEBAR - MOBILE SCROLLABLE
+        ========================= */
+        .sidebar {
+            position: fixed;
+            top: calc(56px + env(safe-area-inset-top));
+            left: 0;
+            width: 270px;
+            min-width: 270px;
+            max-width: 85vw;
+            height: calc(100vh - 56px - env(safe-area-inset-top) - 32px - env(safe-area-inset-bottom));
+            height: calc(-webkit-fill-available - 56px - 32px);
+            z-index: 900;
+            transition: transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.3s cubic-bezier(0.4,0,0.2,1);
+            background: rgb(2, 95, 59);
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 20px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0,255,106,0.5) transparent;
+        }
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(0,255,106,0.5);
+            border-radius: 2px;
+        }
+        .sidebar.hidden {
+            transform: translateX(-100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .sidebar h3 {
+            margin: 12px 0 8px;
+            color: rgb(252, 247, 249);
+            padding: 0 15px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .sidebar button,
+        .sidebar input[type="file"] {
+            width: calc(100% - 30px);
+            margin: 4px 15px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: none;
+            background: linear-gradient(90deg, #27ae60, #2ecc71);
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+            min-height: 40px;
+            touch-action: manipulation;
+        }
+
+        .sidebar button:active,
+        .sidebar button:hover {
+            background: #4797ff;
+            color: rgb(16, 8, 237);
+            box-shadow: 0 0 15px rgb(13, 255, 0);
+            transform: scale(0.98);
+        }
+
+        .color-control-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 15px;
+            margin: 4px 0;
+            flex-wrap: wrap;
+        }
+
+        .color-control-row label {
+            color: #fff;
+            font-size: 12px;
+            min-width: 75px;
+            flex-shrink: 0;
+        }
+
+        .color-icon-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.15s, box-shadow 0.15s;
+            flex-shrink: 0;
+            touch-action: manipulation;
+        }
+
+        .color-icon-btn:active,
+        .color-icon-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255,255,255,0.4);
+        }
+
+        .color-icon-btn input[type="color"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            padding: 0;
+            border: none;
+        }
+
+        .color-icon-btn::after {
+            content: "✥";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+
+        .color-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            margin: 10px 15px;
+        }
+        
+        .color-ok-btn {
+            padding: 6px 14px;
+            background: linear-gradient(90deg, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+            height: 30px;
+            min-height: 30px;
+            touch-action: manipulation;
+            flex-shrink: 0;
+        }
+        
+        .color-ok-btn:active,
+        .color-ok-btn:hover {
+            background: #4797ff;
+            color: rgb(16, 8, 237);
+            box-shadow: 0 0 10px rgb(13, 255, 0);
+            transform: scale(0.98);
+        }
+
+        /* =========================
+        CANVAS AREA - MOBILE TOUCH
+        ========================= */
+        .canvas-area {
+            flex: 1;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #ffffff;
+            overflow: hidden;
+            cursor: default;
+            touch-action: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .canvas-viewport {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+            touch-action: none;
+        }
+
+        .canvas-wrapper {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            box-shadow: 0 0 40px rgba(0,0,0,0.1), 0 0 80px rgba(0,0,0,0.05);
+            border: none;
+            border-radius: 8px;
+            overflow: visible;
+            cursor: default;
+            touch-action: none;
+            transition: none;
+            will-change: transform, left, top;
+        }
+        .canvas-wrapper:active { cursor: grabbing; }
+        .canvas-wrapper.dragging { cursor: grabbing; }
+
+        .canvas-handle {
+            position: absolute;
+            top: -36px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #00ff6a, #00cc55);
+            color: #0a0a12;
+            padding: 6px 20px;
+            border-radius: 22px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: grab;
+            box-shadow: 0 0 12px rgba(0,255,106,0.5), 0 0 24px rgba(0,255,106,0.2);
+            z-index: 10;
+            white-space: nowrap;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            touch-action: none;
+            -webkit-user-select: none;
+        }
+        .canvas-handle::before { content: "⠿"; font-size: 15px; }
+        .canvas-handle:active {
+            cursor: grabbing;
+            background: linear-gradient(135deg, #00cc55, #00aa44);
+        }
+
+        canvas {
+            display: block;
+            touch-action: none;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        /* =========================
+        STATUS BAR - MOBILE
+        ========================= */
+        .statusbar {
+            position: fixed;
+            bottom: env(safe-area-inset-bottom);
+            left: 0;
+            right: 0;
+            padding: 6px 12px;
+            border-top: 1px solid rgb(71, 101, 208);
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            background: rgb(2, 95, 59);
+            z-index: 1000;
+            transition: transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.3s cubic-bezier(0.4,0,0.2,1);
+            height: auto;
+            min-height: 32px;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .statusbar.hidden {
+            transform: translateY(100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .custom-dropdown {
+            position: relative;
+            width: calc(100% - 30px);
+            margin: 4px 15px;
+        }
+
+        .dropdown-selected {
+            background-color: #0fbb79;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: black;
+            font-size: 13px;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            touch-action: manipulation;
+        }
+
+        .dropdown-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: #0fbb79;
+            border-radius: 8px;
+            margin-top: 4px;
+            z-index: 99999;
+            max-height: 200px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .dropdown-list div {
+            padding: 10px 12px;
+            cursor: pointer;
+            color: black;
+            font-size: 13px;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+        }
+
+        .dropdown-list div:active,
+        .dropdown-list div:hover {
+            background: #ed01ce;
+            color: white;
+        }
+
+        .sidebar-scroll {
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 4px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #fontFamily {
+            background-color: #0fbb79;
+            color: #000;
+            border: none;
+            padding: 10px 12px;
+            border-radius: 8px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            width: calc(100% - 30px);
+            margin: 4px 15px;
+            cursor: pointer;
+            font-size: 13px;
+            height: 36px;
+            min-height: 36px;
+        }
+
+        #fontFamily option {
+            background-color: #0fbb79;
+            color: #000;
+            padding: 8px;
+        }
+
+        #masterSwitch {
+            width: 52px;
+            height: 52px;
+            background: radial-gradient(circle, #00ff6a, #00aa44);
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            position: fixed;
+            bottom: calc(40px + env(safe-area-inset-bottom));
+            left: calc(270px + 24px);
+            cursor: move;
+            z-index: 999999;
+            box-shadow: 0 0 12px rgba(0,255,106,0.5), 0 0 24px rgba(0,255,106,0.2), inset 0 0 15px rgba(255,255,255,0.2);
+            transition: box-shadow 0.3s cubic-bezier(0.4,0,0.2,1), transform 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            will-change: transform, left, top;
+        }
+        #masterSwitch:active,
+        #masterSwitch:hover {
+            box-shadow: 0 0 20px rgba(0,255,106,0.8), 0 0 40px rgba(0,255,106,0.4);
+            transform: scale(1.05);
+        }
+        #masterSwitch:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+        }
+        #masterSwitch svg {
+            width: 22px;
+            height: 22px;
+            fill: #0a0a12;
+            pointer-events: none;
+        }
+
+        .canvas-wrapper { min-width: 100px; min-height: 100px; }
+        .canvas-wrapper.fabric-editing { pointer-events: none; }
+        .canvas-wrapper.fabric-editing canvas { pointer-events: auto; }
+        .fabric-object { shape-rendering: geometricPrecision; }
+        .fabric-object--selected { stroke-width: 3px !important; stroke: #000000 !important; }
+
+        #grid-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0.3;
+            display: none;
+            touch-action: none;
+        }
+
+        /* Mobile-specific adjustments */
+        @media (max-width: 768px) {
+            .sidebar { 
+                width: 240px; 
+                min-width: 240px;
+                max-width: 85vw;
+            }
+            .workspace { left: 240px; }
+            
+            .topbar button {
+                padding: 6px 9px;
+                font-size: 10px;
+                height: 30px;
+            }
+            
+            .canvas-size-panel {
+                gap: 4px;
+                padding: 4px 6px;
+            }
+            
+            .canvas-size-panel input {
+                width: 45px;
+                font-size: 10px;
+            }
+            
+            .canvas-size-panel button {
+                padding: 4px 7px;
+                font-size: 9px;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .sidebar { 
+                width: 0; 
+                border: none;
+                min-width: 0;
+            }
+            .workspace { left: 0; }
+            
+            .topbar {
+                padding: 6px 8px;
+                gap: 4px;
+            }
+            
+            .tool-group {
+                gap: 4px;
+                padding: 2px 0;
+            }
+            
+            .topbar button {
+                padding: 5px 7px;
+                font-size: 9px;
+                height: 28px;
+                min-width: auto;
+            }
+            
+            .canvas-size-panel {
+                display: none;
+            }
+            
+            .statusbar {
+                font-size: 10px;
+                padding: 4px 8px;
+            }
+            
+            #masterSwitch {
+                left: calc(24px);
+                bottom: calc(36px + env(safe-area-inset-bottom));
+            }
+        }
+
+        /* Prevent pull-to-refresh on mobile */
+        body.pull-to-refresh-disabled {
+            overscroll-behavior-y: contain;
+        }
+
+        /* Improve tap targets on mobile */
+        @media (hover: none) and (pointer: coarse) {
+            button, 
+            .color-icon-btn, 
+            .dropdown-selected,
+            .dropdown-list div {
+                min-height: 44px;
+                min-width: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .topbar button {
+                min-width: 36px;
+                padding: 6px 8px;
+            }
+            
+            input[type="number"],
+            input[type="color"] {
+                min-height: 40px;
+            }
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,255,106,0.4); border-radius: 3px; }
+    </style>
+</head>
+<body class="pull-to-refresh-disabled">
+    <div class="topbar panel" id="topbarPanel">
+        <div class="tool-group" id="toolGroup">
+            <button onclick="addText()">Add Text</button>
+            <button onclick="addRectangle()">Rectangle</button>
+            <button onclick="addCircle()">Circle</button>
+            <button onclick="addTriangle()">Triangle</button>
+            <button onclick="addImageUpload()">🖼️ Image</button>
+            <button onclick="toggleDragMode()">Drag Mode</button>
+            <button onclick="deleteSelected()">Delete</button>
+            <button onclick="bringForward()">Forward</button>
+            <button onclick="sendBackward()">Backward</button>
+            <button onclick="downloadPNG()">PNG</button>
+            <button onclick="toggleSidebar()">Panel</button>
+            <button onclick="zoomIn()">Zoom +</button>
+            <button onclick="zoomOut()">Zoom -</button>
+            <button onclick="resetZoom()">Reset</button>
+        </div>
+
+        <div class="canvas-size-panel">
+            <label>W:</label>
+            <input type="number" id="canvasWidth" value="1820" min="100" max="5000">
+            <label>H:</label>
+            <input type="number" id="canvasHeight" value="1920" min="100" max="5000">
+            <button onclick="resizeCanvas()">Resize</button>
+        </div>
+    </div>
+
+    <div class="workspace" id="workspace">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-scroll">
+                <h3>️ Main Background</h3>
+                <div style="padding: 0 15px; margin-bottom: 6px;">
+                    <label style="color: rgba(255,255,255,0.7); font-size: 11px;">Outer area around canvas</label>
+                </div>
+                <div class="color-control-row">
+                    <label>Main BG</label>
+                    <div class="color-icon-btn" title="Change Main Canvas Background">
+                        <input type="color" id="mainBgColor" value="#ffffff">
+                    </div>
+                    <button class="color-ok-btn" onclick="applyMainBgColor()">OK</button>
+                </div>
+                
+                <div class="color-divider"></div>
+
+                <h3>🎨 Canvas Background</h3>
+                <div style="padding: 0 15px; margin-bottom: 6px;">
+                    <label style="color: rgba(255,255,255,0.7); font-size: 11px;">Inner workspace canvas</label>
+                </div>
+                <div class="color-control-row">
+                    <label>Canvas BG</label>
+                    <div class="color-icon-btn" title="Change Canvas Background">
+                        <input type="color" id="canvasBgColor" value="#ffffff">
+                    </div>
+                    <button class="color-ok-btn" onclick="applyCanvasBgColor()">OK</button>
+                </div>
+                
+                <div class="color-divider"></div>
+
+                <h3>Text Settings</h3>
+                
+                <label style="padding:0 15px; display:block; font-size:12px;">Font Family</label>
+                <div class="custom-dropdown">
+                    <div class="dropdown-selected" onclick="toggleFontDropdown()">Arial <span style="margin-left:auto">▼</span></div>
+                    <div class="dropdown-list" id="fontDropdown">
+                        <div onclick="setFont('Arial')">Arial</div>
+                        <div onclick="setFont('Source Sans Pro')">Source Sans Pro</div>
+                        <div onclick="setFont('Times New Roman')">Times New Roman</div>
+                        <div onclick="setFont('Georgia')">Georgia</div>
+                        <div onclick="setFont('Courier New')">Courier New</div>
+                        <div onclick="setFont('Impact')">Impact</div>
+                        <div onclick="setFont('Calibri')">Calibri</div>
+                        <div onclick="setFont('Tahoma')">Tahoma</div>
+                    </div>
+                </div>
+
+                <label style="padding:0 15px; display:block; font-size:12px;">Font Size</label>
+                <input type="number" id="fontSize" value="48" min="8" max="200" onchange="changeFontSize()">
+
+                <div class="color-divider"></div>
+                
+                <div class="color-control-row">
+                    <label>Text Color</label>
+                    <div class="color-icon-btn" title="Change Text Color">
+                        <input type="color" id="textColor" value="#000000">
+                    </div>
+                    <button class="color-ok-btn" onclick="applyTextColor()">OK</button>
+                </div>
+                
+                <div class="color-control-row">
+                    <label>Text BG</label>
+                    <div class="color-icon-btn" title="Change Text Background">
+                        <input type="color" id="textBgColor" value="#ffffff">
+                    </div>
+                    <button class="color-ok-btn" onclick="applyTextBg()">OK</button>
+                </div>
+                
+                <div class="color-control-row">
+                    <label>Border Color</label>
+                    <div class="color-icon-btn" title="Change Selection Border Color">
+                        <input type="color" id="selectionBorderColor" value="#000000">
+                    </div>
+                    <button class="color-ok-btn" onclick="applySelectionBorderColor()">OK</button>
+                </div>
+                
+                <div class="color-divider"></div>
+
+                <h3>Shape Colors</h3>
+                <div class="color-control-row">
+                    <label>Shape Fill</label>
+                    <div class="color-icon-btn" title="Change Shape Fill">
+                        <input type="color" id="shapeFillColor" value="#4CAF50">
+                    </div>
+                    <button class="color-ok-btn" onclick="applyShapeFill()">OK</button>
+                </div>
+                <div class="color-control-row">
+                    <label>Shape Border</label>
+                    <div class="color-icon-btn" title="Change Shape Border">
+                        <input type="color" id="shapeStrokeColor" value="#000000">
+                    </div>
+                    <button class="color-ok-btn" onclick="applyShapeStroke()">OK</button>
+                </div>
+
+                <div class="color-divider"></div>
+
+                <h3>Shapes</h3>
+                <button onclick="addRectangle()">Add Rectangle</button>
+                <button onclick="addCircle()">Add Circle</button>
+                <button onclick="addTriangle()">Add Triangle</button>
+
+                <h3>Image Upload</h3>
+                <button onclick="addImageUpload()">📁 Choose Image</button>
+                <input type="file" id="imageUpload" accept="image/*" style="display:none">
+
+                <h3>Grid & Alignment</h3>
+                <button onclick="toggleGrid()">Toggle Grid</button>
+                <button onclick="alignCenter()">Center Object</button>
+
+                <h3>Canvas Info</h3>
+                <div id="pixelInfo" style="padding:0 15px; font-size:11px; line-height:1.8;">
+                    Size: <span id="info-size" style="color:#00ff6a;">1820 × 1920</span><br>
+                    Zoom: <span id="info-zoom" style="color:#00ff6a;">100%</span><br>
+                    Objects: <span id="info-objects" style="color:#00ff6a;">0</span><br>
+                    Selected: <span id="info-selected" style="color:#ff2d95;">None</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-area" id="canvasArea">
+            <div class="canvas-viewport" id="canvasViewport">
+                <div class="canvas-wrapper" id="canvasWrapper">
+                    <div class="canvas-handle" id="canvasHandle">DRAG CANVAS</div>
+                    <canvas id="designCanvas"></canvas>
+                </div>
+                <canvas id="grid-overlay"></canvas>
+            </div>
+        </div>
+
+        <div id="masterSwitch" title="Toggle UI Panels">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        </div>
+    </div>
+
+    <div class="statusbar" id="statusbar">
+        <span id="selectedObject">No Object Selected</span>
+        <span id="canvasStatus">Canvas: 1820 x 1920 | Zoom: 100%</span>
+        <span id="panStatus">Drag Mode: Off</span>
+    </div>
+
+    <input type="file" id="hidden-img" accept="image/*" style="display:none">
+
+<script>
+    // =========================
+    // MOBILE TOUCH OPTIMIZATION
+    // =========================
+    
+    // Prevent default touch behaviors that interfere with canvas
+    document.addEventListener('touchmove', function(e) {
+        if (e.target.closest('.canvas-area') && !e.target.closest('input, textarea')) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    // Prevent pull-to-refresh when interacting with canvas
+    document.addEventListener('touchstart', function(e) {
+        if (e.target.closest('.canvas-area')) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }
+    }, { passive: false });
+
+    // Global variables
+    let CW = 1820, CH = 1920;
+    let zoomLevel = 1;
+    let dragMode = false;
+    let gridVisible = false;
+    let isUIVisible = true;
+    let currentCanvasBgColor = '#ffffff';
+    let currentMainBgColor = '#ffffff';
+    
+    // Touch/Pinch state
+    let touchStartDistance = 0;
+    let touchStartZoom = 1;
+    let isPinching = false;
+    let lastTouchTime = 0;
+    
+    // Canvas drag state
+    let isDraggingWrapper = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let dragStartWrapperLeft = 0;
+    let dragStartWrapperTop = 0;
+    
+    // Master switch drag state
+    let msDragging = false;
+    let msMoved = false;
+    let msStartX = 0;
+    let msStartY = 0;
+    let msStartLeft = 0;
+    let msStartTop = 0;
+
+    // Initialize Fabric Canvas with mobile optimizations
+    const canvas = new fabric.Canvas('designCanvas', {
+        selection: true,
+        width: CW,
+        height: CH,
+        backgroundColor: currentCanvasBgColor,
+        preserveObjectStacking: true,
+        enableRetinaScaling: true,
+        skipOffscreen: true,
+        borderColor: '#000000',
+        borderScaleFactor: 2.5,
+        cornerColor: '#000000',
+        cornerStrokeColor: '#ffffff',
+        cornerSize: 14, // Larger corners for mobile
+        transparentCorners: false,
+        centeredScaling: true,
+        uniformScaling: true,
+        stopContextMenu: true,
+        fireRightClick: false,
+        hoverCursor: 'move',
+        moveCursor: 'move',
+        defaultCursor: 'default'
+    });
+
+    // DOM References
+    const canvasArea = document.getElementById('canvasArea');
+    const canvasViewport = document.getElementById('canvasViewport');
+    const canvasWrapper = document.getElementById('canvasWrapper');
+    const canvasHandle = document.getElementById('canvasHandle');
+    const masterSwitch = document.getElementById('masterSwitch');
+    const sidebar = document.getElementById('sidebar');
+    const topbar = document.getElementById('topbarPanel');
+    const statusbar = document.getElementById('statusbar');
+    const workspace = document.getElementById('workspace');
+    const gridOverlay = document.getElementById('grid-overlay');
+    const imageUploadInput = document.getElementById('imageUpload');
+    const hiddenImgInput = document.getElementById('hidden-img');
+    const toolGroup = document.getElementById('toolGroup');
+
+    // =========================
+    // CANVAS RESIZE & ZOOM
+    // =========================
+    
+    function resizeCanvas() {
+        CW = parseInt(document.getElementById('canvasWidth').value) || 1820;
+        CH = parseInt(document.getElementById('canvasHeight').value) || 1920;
+        canvas.setDimensions({ width: CW, height: CH });
+        canvas.renderAll();
+        document.getElementById('info-size').textContent = `${CW} × ${CH}`;
+        drawGrid();
+        centerWrapper();
+        updatePixelInfo();
+    }
+
+    function applyMainBgColor() {
+        currentMainBgColor = document.getElementById('mainBgColor').value;
+        canvasArea.style.background = currentMainBgColor;
+    }
+
+    function applyCanvasBgColor() {
+        currentCanvasBgColor = document.getElementById('canvasBgColor').value;
+        canvas.setBackgroundColor(currentCanvasBgColor, canvas.renderAll.bind(canvas));
+        canvas.renderAll();
+    }
+
+    function drawGrid() {
+        gridOverlay.width = CW * zoomLevel;
+        gridOverlay.height = CH * zoomLevel;
+        gridOverlay.style.width = (CW * zoomLevel) + 'px';
+        gridOverlay.style.height = (CH * zoomLevel) + 'px';
+        const ctx = gridOverlay.getContext('2d');
+        ctx.clearRect(0, 0, gridOverlay.width, gridOverlay.height);
+        ctx.strokeStyle = 'rgba(0,255,106,0.15)';
+        ctx.lineWidth = 1;
+        const step = 40 * zoomLevel;
+        for (let x = 0; x <= gridOverlay.width; x += step) {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, gridOverlay.height); ctx.stroke();
+        }
+        for (let y = 0; y <= gridOverlay.height; y += step) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(gridOverlay.width, y); ctx.stroke();
+        }
+    }
+
+    function toggleGrid() {
+        gridVisible = !gridVisible;
+        gridOverlay.style.display = gridVisible ? 'block' : 'none';
+        if (gridVisible) drawGrid();
+    }
+
+    function setZoom(z, centerX, centerY) {
+        zoomLevel = Math.max(0.1, Math.min(5, z));
+        
+        // If center point provided, zoom towards that point
+        if (centerX !== undefined && centerY !== undefined) {
+            const rect = canvasWrapper.getBoundingClientRect();
+            const wrapperLeft = rect.left;
+            const wrapperTop = rect.top;
+            
+            // Calculate the point relative to canvas
+            const canvasX = (centerX - wrapperLeft) / zoomLevel;
+            const canvasY = (centerY - wrapperTop) / zoomLevel;
+            
+            canvas.zoomToPoint({ x: canvasX, y: canvasY }, zoomLevel);
+        } else {
+            canvas.setZoom(zoomLevel);
+        }
+        
+        canvas.setWidth(CW * zoomLevel);
+        canvas.setHeight(CH * zoomLevel);
+        canvasWrapper.style.width = (CW * zoomLevel) + 'px';
+        canvasWrapper.style.height = (CH * zoomLevel) + 'px';
+        
+        document.getElementById('info-zoom').textContent = Math.round(zoomLevel * 100) + '%';
+        document.getElementById('canvasStatus').textContent = `Canvas: ${CW} x ${CH} | Zoom: ${Math.round(zoomLevel * 100)}%`;
+        
+        drawGrid();
+        if (gridVisible) gridOverlay.style.display = 'block';
+        updatePixelInfo();
+    }
+
+    function zoomIn() { setZoom(zoomLevel * 1.2); }
+    function zoomOut() { setZoom(zoomLevel / 1.2); }
+    function resetZoom() { 
+        setZoom(1); 
+        centerWrapper();
+    }
+
+    function centerWrapper() {
+        canvasWrapper.style.top = '50%';
+        canvasWrapper.style.left = '50%';
+        canvasWrapper.style.transform = 'translate(-50%, -50%)';
+    }
+
+    // =========================
+    // TOUCH & PINCH ZOOM HANDLING
+    // =========================
+    
+    canvasViewport.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvasViewport.addEventListener('touchmove', handleTouchMove, { passive: false });
+    canvasViewport.addEventListener('touchend', handleTouchEnd, { passive: false });
+    canvasViewport.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+
+    function handleTouchStart(e) {
+        // Handle pinch zoom
+        if (e.touches.length === 2) {
+            e.preventDefault();
+            isPinching = true;
+            touchStartDistance = getTouchDistance(e.touches);
+            touchStartZoom = zoomLevel;
+            return;
+        }
+        
+        // Handle single touch for canvas drag in drag mode
+        if (dragMode && e.touches.length === 1) {
+            const touch = e.touches[0];
+            const target = canvas.findTarget({ clientX: touch.clientX, clientY: touch.clientY });
+            
+            // Only drag canvas if not touching an object
+            if (!target) {
+                e.preventDefault();
+                isDraggingWrapper = true;
+                dragStartX = touch.clientX;
+                dragStartY = touch.clientY;
+                
+                const rect = canvasWrapper.getBoundingClientRect();
+                dragStartWrapperLeft = rect.left;
+                dragStartWrapperTop = rect.top;
+                
+                canvasWrapper.classList.add('dragging');
+                canvasWrapper.style.transform = 'none';
+            }
+        }
+    }
+
+    function handleTouchMove(e) {
+        // Pinch zoom handling
+        if (isPinching && e.touches.length === 2) {
+            e.preventDefault();
+            const currentDistance = getTouchDistance(e.touches);
+            const scale = currentDistance / touchStartDistance;
+            const newZoom = touchStartZoom * scale;
+            
+            // Calculate center point between fingers for zoom focus
+            const touch1 = e.touches[0];
+            const touch2 = e.touches[1];
+            const centerX = (touch1.clientX + touch2.clientX) / 2;
+            const centerY = (touch1.clientY + touch2.clientY) / 2;
+            
+            setZoom(newZoom, centerX, centerY);
+            return;
+        }
+        
+        // Canvas drag handling
+        if (isDraggingWrapper && e.touches.length === 1) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - dragStartX;
+            const deltaY = touch.clientY - dragStartY;
+            
+            canvasWrapper.style.left = (dragStartWrapperLeft + deltaX) + 'px';
+            canvasWrapper.style.top = (dragStartWrapperTop + deltaY) + 'px';
+        }
+    }
+
+    function handleTouchEnd(e) {
+        if (isPinching) {
+            isPinching = false;
+        }
+        if (isDraggingWrapper) {
+            isDraggingWrapper = false;
+            canvasWrapper.classList.remove('dragging');
+            canvasWrapper.style.cursor = dragMode ? 'grab' : 'default';
+        }
+    }
+
+    function getTouchDistance(touches) {
+        const dx = touches[0].clientX - touches[1].clientX;
+        const dy = touches[0].clientY - touches[1].clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    // Mouse wheel zoom (desktop)
+    canvasViewport.addEventListener('wheel', function(e) {
+        if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            setZoom(zoomLevel * delta, e.clientX, e.clientY);
+        }
+    }, { passive: false });
+
+    // =========================
+    // CANVAS DRAG MODE
+    // =========================
+    
+    // Mouse drag for canvas (desktop)
+    canvasWrapper.addEventListener('mousedown', function(e) {
+        if (!dragMode) return;
+        const target = canvas.findTarget(e);
+        if (target) return;
+        
+        isDraggingWrapper = true;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        
+        const rect = canvasWrapper.getBoundingClientRect();
+        dragStartWrapperLeft = rect.left;
+        dragStartWrapperTop = rect.top;
+        
+        canvasWrapper.style.cursor = 'grabbing';
+        canvasWrapper.style.transform = 'none';
+        e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', function(e) {
+        if (!isDraggingWrapper) return;
+        e.preventDefault();
+        canvasWrapper.style.left = (dragStartWrapperLeft + (e.clientX - dragStartX)) + 'px';
+        canvasWrapper.style.top = (dragStartWrapperTop + (e.clientY - dragStartY)) + 'px';
+    });
+
+    window.addEventListener('mouseup', function() {
+        if (isDraggingWrapper) {
+            isDraggingWrapper = false;
+            canvasWrapper.style.cursor = dragMode ? 'grab' : 'default';
+        }
+    });
+
+    // Canvas handle drag (both mouse and touch)
+    canvasHandle.addEventListener('mousedown', startCanvasHandleDrag);
+    canvasHandle.addEventListener('touchstart', function(e) {
+        e.stopPropagation();
+        startCanvasHandleDrag(e);
+    }, { passive: false });
+
+    function startCanvasHandleDrag(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+        
+        isDraggingWrapper = true;
+        dragStartX = clientX;
+        dragStartY = clientY;
+        
+        const rect = canvasWrapper.getBoundingClientRect();
+        dragStartWrapperLeft = rect.left;
+        dragStartWrapperTop = rect.top;
+        
+        canvasWrapper.style.transform = 'none';
+        canvasWrapper.classList.add('dragging');
+        
+        // Add move/end listeners for touch
+        if (e.type === 'touchstart') {
+            const onTouchMove = function(ev) {
+                if (!isDraggingWrapper) return;
+                ev.preventDefault();
+                const touch = ev.touches[0];
+                canvasWrapper.style.left = (dragStartWrapperLeft + (touch.clientX - dragStartX)) + 'px';
+                canvasWrapper.style.top = (dragStartWrapperTop + (touch.clientY - dragStartY)) + 'px';
+            };
+            
+            const onTouchEnd = function() {
+                isDraggingWrapper = false;
+                canvasWrapper.classList.remove('dragging');
+                canvasWrapper.style.cursor = dragMode ? 'grab' : 'default';
+                document.removeEventListener('touchmove', onTouchMove);
+                document.removeEventListener('touchend', onTouchEnd);
+                document.removeEventListener('touchcancel', onTouchEnd);
+            };
+            
+            document.addEventListener('touchmove', onTouchMove, { passive: false });
+            document.addEventListener('touchend', onTouchEnd);
+            document.addEventListener('touchcancel', onTouchEnd);
+        }
+    }
+
+    function toggleDragMode() {
+        dragMode = !dragMode;
+        document.getElementById('panStatus').textContent = `Drag Mode: ${dragMode ? 'On' : 'Off'}`;
+        canvasWrapper.style.cursor = dragMode ? 'grab' : 'default';
+        canvas.selection = !dragMode;
+        canvas.forEachObject(o => {
+            o.selectable = !dragMode;
+            o.evented = !dragMode;
+        });
+        canvas.discardActiveObject();
+        canvas.requestRenderAll();
+        updateInfo();
+    }
+
+    // =========================
+    // MASTER SWITCH DRAG (FIXED FOR MOBILE)
+    // =========================
+    
+    masterSwitch.addEventListener('mousedown', startMasterSwitchDrag);
+    masterSwitch.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        startMasterSwitchDrag(e);
+    }, { passive: false });
+
+    function startMasterSwitchDrag(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+        
+        msDragging = true;
+        msMoved = false;
+        msStartX = clientX;
+        msStartY = clientY;
+        msStartLeft = masterSwitch.offsetLeft;
+        msStartTop = masterSwitch.offsetTop;
+        masterSwitch.style.transition = 'none';
+        
+        // Add move/end listeners
+        const moveHandler = function(ev) {
+            if (!msDragging) return;
+            ev.preventDefault();
+            
+            const moveX = ev.type === 'touchmove' ? ev.touches[0].clientX : ev.clientX;
+            const moveY = ev.type === 'touchmove' ? ev.touches[0].clientY : ev.clientY;
+            
+            const dx = moveX - msStartX;
+            const dy = moveY - msStartY;
+            
+            if (Math.abs(dx) > 3 || Math.abs(dy) > 3) msMoved = true;
+            
+            const maxX = window.innerWidth - 52;
+            const maxY = window.innerHeight - 52;
+            let newLeft = msStartLeft + dx;
+            let newTop = msStartTop + dy;
+            
+            newLeft = Math.max(10, Math.min(newLeft, maxX));
+            newTop = Math.max(10, Math.min(newTop, maxY));
+            
+            masterSwitch.style.left = newLeft + 'px';
+            masterSwitch.style.top = newTop + 'px';
+        };
+        
+        const endHandler = function(ev) {
+            if (msDragging) {
+                // Toggle UI only if not moved significantly (tap)
+                if (!msMoved) {
+                    isUIVisible = !isUIVisible;
+                    topbar.classList.toggle('hidden', !isUIVisible);
+                    sidebar.classList.toggle('hidden', !isUIVisible);
+                    statusbar.classList.toggle('hidden', !isUIVisible);
+                    workspace.classList.toggle('expanded', !isUIVisible);
+                    if (!isUIVisible) document.getElementById('selectedObject').style.display = 'none';
+                }
+                msDragging = false;
+                masterSwitch.style.transition = 'box-shadow 0.3s cubic-bezier(0.4,0,0.2,1), transform 0.15s';
+            }
+            
+            // Remove listeners
+            document.removeEventListener('mousemove', moveHandler);
+            document.removeEventListener('mouseup', endHandler);
+            document.removeEventListener('touchmove', moveHandler);
+            document.removeEventListener('touchend', endHandler);
+            document.removeEventListener('touchcancel', endHandler);
+        };
+        
+        // Add appropriate listeners based on event type
+        if (e.type === 'touchstart') {
+            document.addEventListener('touchmove', moveHandler, { passive: false });
+            document.addEventListener('touchend', endHandler);
+            document.addEventListener('touchcancel', endHandler);
+        } else {
+            document.addEventListener('mousemove', moveHandler);
+            document.addEventListener('mouseup', endHandler);
+        }
+    }
+
+    // =========================
+    // OBJECT & UI FUNCTIONS
+    // =========================
+    
+    function applyTextColor() {
+        const obj = canvas.getActiveObject();
+        if (obj && (obj.type === 'i-text' || obj.type === 'text' || obj.type === 'textbox')) {
+            obj.set('fill', document.getElementById('textColor').value);
+            canvas.requestRenderAll();
+            updateInfo();
+        }
+    }
+
+    function applyTextBg() {
+        const obj = canvas.getActiveObject();
+        if (obj && (obj.type === 'i-text' || obj.type === 'text' || obj.type === 'textbox')) {
+            obj.set('backgroundColor', document.getElementById('textBgColor').value);
+            canvas.requestRenderAll();
+            updateInfo();
+        }
+    }
+
+    function applySelectionBorderColor() {
+        const color = document.getElementById('selectionBorderColor').value;
+        canvas.forEachObject(obj => {
+            obj.set({
+                borderColor: color,
+                cornerColor: color,
+                cornerStrokeColor: '#ffffff'
+            });
+        });
+        canvas.renderAll();
+    }
+
+    function applyShapeFill() {
+        const obj = canvas.getActiveObject();
+        if (obj && obj.type !== 'i-text' && obj.type !== 'text' && obj.type !== 'textbox' && obj.type !== 'image') {
+            obj.set('fill', document.getElementById('shapeFillColor').value);
+            canvas.requestRenderAll();
+            updateInfo();
+        }
+    }
+
+    function applyShapeStroke() {
+        const obj = canvas.getActiveObject();
+        if (obj && obj.type !== 'i-text' && obj.type !== 'text' && obj.type !== 'textbox' && obj.type !== 'image') {
+            obj.set('stroke', document.getElementById('shapeStrokeColor').value);
+            obj.set('strokeWidth', 2);
+            canvas.requestRenderAll();
+            updateInfo();
+        }
+    }
+
+    function addText() {
+        const t = new fabric.IText('Double-click to edit', {
+            left: CW/2, top: CH/2,
+            fontSize: parseInt(document.getElementById('fontSize').value) || 48,
+            fontFamily: document.querySelector('.dropdown-selected').innerText.replace(' ▼', '').replace(' 🡅', '') || 'Arial',
+            fill: document.getElementById('textColor').value || '#000000',
+            originX: 'center', originY: 'center',
+            selectable: !dragMode,
+            evented: !dragMode,
+            cornerSize: 14
+        });
+        canvas.add(t);
+        canvas.setActiveObject(t);
+        canvas.requestRenderAll();
+        updateInfo();
+    }
+
+    function addRectangle() {
+        const r = new fabric.Rect({
+            left: CW/2, top: CH/2,
+            width: 250, height: 150,
+            fill: document.getElementById('shapeFillColor').value,
+            stroke: document.getElementById('shapeStrokeColor').value,
+            strokeWidth: 0,
+            originX: 'center', originY: 'center',
+            selectable: !dragMode,
+            evented: !dragMode,
+            cornerSize: 14
+        });
+        canvas.add(r);
+        canvas.setActiveObject(r);
+        canvas.requestRenderAll();
+        updateInfo();
+    }
+
+    function addCircle() {
+        const c = new fabric.Circle({
+            left: CW/2, top: CH/2,
+            radius: 80,
+            fill: document.getElementById('shapeFillColor').value,
+            stroke: document.getElementById('shapeStrokeColor').value,
+            strokeWidth: 0,
+            originX: 'center', originY: 'center',
+            selectable: !dragMode,
+            evented: !dragMode,
+            cornerSize: 14
+        });
+        canvas.add(c);
+        canvas.setActiveObject(c);
+        canvas.requestRenderAll();
+        updateInfo();
+    }
+
+    function addTriangle() {
+        const t = new fabric.Triangle({
+            left: CW/2, top: CH/2,
+            width: 160, height: 160,
+            fill: document.getElementById('shapeFillColor').value,
+            stroke: document.getElementById('shapeStrokeColor').value,
+            strokeWidth: 0,
+            originX: 'center', originY: 'center',
+            selectable: !dragMode,
+            evented: !dragMode,
+            cornerSize: 14
+        });
+        canvas.add(t);
+        canvas.setActiveObject(t);
+        canvas.requestRenderAll();
+        updateInfo();
+    }
+
+    function addImageUpload() {
+        hiddenImgInput.click();
+    }
+
+    hiddenImgInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (!file.type.match('image.*')) {
+            alert('Please select a valid image file (PNG, JPG, GIF, etc.)');
+            this.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            fabric.Image.fromURL(ev.target.result, function(img) {
+                const maxW = CW * 0.6;
+                const maxH = CH * 0.6;
+                const scale = Math.min(maxW / img.width, maxH / img.height, 1);
+                img.set({
+                    left: CW / 2, top: CH / 2,
+                    originX: 'center', originY: 'center',
+                    scaleX: scale, scaleY: scale,
+                    selectable: !dragMode,
+                    evented: !dragMode,
+                    lockUniScaling: false,
+                    cornerSize: 14,
+                    transparentCorners: false,
+                    borderColor: document.getElementById('selectionBorderColor').value || '#000000',
+                    cornerColor: document.getElementById('selectionBorderColor').value || '#000000',
+                    cornerStrokeColor: '#ffffff'
+                });
+                canvas.add(img);
+                canvas.setActiveObject(img);
+                canvas.requestRenderAll();
+                updateInfo();
+                hiddenImgInput.value = '';
+            }, { crossOrigin: 'anonymous' });
+        };
+        reader.onerror = function() {
+            alert('Error loading image. Please try another file.');
+            hiddenImgInput.value = '';
+        };
+        reader.readAsDataURL(file);
+    });
+
+    imageUploadInput.addEventListener('change', function(e) {
+        hiddenImgInput.files = this.files;
+        hiddenImgInput.dispatchEvent(new Event('change'));
+        this.value = '';
+    });
+
+    function deleteSelected() {
+        const active = canvas.getActiveObjects();
+        if (active.length) {
+            active.forEach(o => canvas.remove(o));
+            canvas.discardActiveObject();
+            canvas.requestRenderAll();
+            updateInfo();
+        }
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+            deleteSelected();
+        }
+    });
+
+    function bringForward() { const o = canvas.getActiveObject(); if(o){canvas.bringForward(o); updateInfo();} }
+    function sendBackward() { const o = canvas.getActiveObject(); if(o){canvas.sendBackwards(o); updateInfo();} }
+
+    function changeFontSize() {
+        const obj = canvas.getActiveObject();
+        const size = parseInt(document.getElementById('fontSize').value) || 48;
+        if (obj && (obj.type === 'i-text' || obj.type === 'text' || obj.type === 'textbox')) {
+            obj.set('fontSize', size);
+            canvas.requestRenderAll();
+            updateInfo();
+        }
+    }
+
+    function setFont(font) {
+        document.querySelector(".dropdown-selected").innerHTML = font + ' <span style="margin-left:auto">▼</span>';
+        document.getElementById("fontDropdown").style.display = "none";
+        const active = canvas.getActiveObject();
+        if (active && (active.type === "i-text" || active.type === "text" || active.type === "textbox")) {
+            active.set("fontFamily", font);
+            canvas.renderAll();
+            updateInfo();
+        }
+    }
+
+    function toggleFontDropdown() {
+        const menu = document.getElementById("fontDropdown");
+        menu.style.display = menu.style.display === "block" ? "none" : "block";
+    }
+
+    document.addEventListener("click", (e) => {
+        if (!e.target.closest(".custom-dropdown")) {
+            document.getElementById("fontDropdown").style.display = "none";
+        }
+    });
+
+    function alignCenter() {
+        const obj = canvas.getActiveObject();
+        if (!obj) return;
+        obj.center();
+        obj.setCoords();
+        canvas.requestRenderAll();
+    }
+
+    function downloadPNG() {
+        const wasGridVisible = gridVisible;
+        if (wasGridVisible) toggleGrid();
+        const dataURL = canvas.toDataURL({ format: 'png', quality: 1, multiplier: 2 });
+        const a = document.createElement('a');
+        a.href = dataURL;
+        a.download = 'ultimate-design-export.png';
+        a.click();
+        if (wasGridVisible) toggleGrid();
+    }
+
+    function toggleSidebar() {
+        sidebar.classList.toggle('hidden');
+        workspace.classList.toggle('expanded');
+        setTimeout(() => {
+            canvas.calcOffset();
+            centerWrapper();
+        }, 350);
+    }
+
+    function updateInfo() {
+        const obj = canvas.getActiveObject();
+        document.getElementById('info-objects').textContent = canvas.getObjects().length;
+
+        if (obj) {
+            document.getElementById('selectedObject').textContent = `Selected: ${obj.type}`;
+            document.getElementById('selectedObject').style.display = 'inline';
+            document.getElementById('info-selected').textContent = obj.type;
+
+            if (obj.type === 'i-text' || obj.type === 'text' || obj.type === 'textbox') {
+                if (obj.fill && typeof obj.fill === 'string') {
+                    try { document.getElementById('textColor').value = obj.fill; } catch(e) {}
+                }
+                if (obj.backgroundColor && typeof obj.backgroundColor === 'string') {
+                    try { document.getElementById('textBgColor').value = obj.backgroundColor; } catch(e) {}
+                }
+            }
+
+            if (obj.type !== 'i-text' && obj.type !== 'text' && obj.type !== 'textbox' && obj.type !== 'image') {
+                if (obj.fill && typeof obj.fill === 'string') {
+                    try { document.getElementById('shapeFillColor').value = obj.fill; } catch(e) {}
+                }
+                if (obj.stroke && typeof obj.stroke === 'string') {
+                    try { document.getElementById('shapeStrokeColor').value = obj.stroke; } catch(e) {}
+                }
+            }
+        } else {
+            document.getElementById('selectedObject').textContent = 'No Object Selected';
+            document.getElementById('info-selected').textContent = 'None';
+        }
+    }
+
+    function updatePixelInfo() {
+        const w = canvas.width;
+        const h = canvas.height;
+        document.getElementById('pixelInfo').innerHTML = 
+            `Size: <span id="info-size" style="color:#00ff6a;">${w} × ${h}</span><br>` +
+            `Zoom: <span id="info-zoom" style="color:#00ff6a;">${Math.round(zoomLevel * 100)}%</span><br>` +
+            `Objects: <span id="info-objects" style="color:#00ff6a;">${canvas.getObjects().length}</span><br>` +
+            `Selected: <span id="info-selected" style="color:#ff2d95;">${canvas.getActiveObject() ? canvas.getActiveObject().type : 'None'}</span>`;
+        document.getElementById('canvasStatus').textContent = `Canvas: ${w} x ${h} | Zoom: ${Math.round(zoomLevel * 100)}%`;
+    }
+
+    // Canvas event listeners
+    canvas.on('selection:created', updateInfo);
+    canvas.on('selection:updated', updateInfo);
+    canvas.on('selection:cleared', updateInfo);
+    canvas.on('object:modified', updateInfo);
+    canvas.on('object:added', updateInfo);
+
+    // Initialize on load
+    window.addEventListener('load', () => {
+        // Set initial canvas wrapper size
+        canvasWrapper.style.width = canvas.width + 'px';
+        canvasWrapper.style.height = canvas.height + 'px';
+        centerWrapper();
+        
+        // Position master switch appropriately for mobile
+        if (window.innerWidth <= 600) {
+            masterSwitch.style.left = '24px';
+            masterSwitch.style.bottom = 'calc(36px + env(safe-area-inset-bottom))';
+        } else {
+            masterSwitch.style.left = (270 + 24) + 'px';
+            masterSwitch.style.top = '62px';
+        }
+        
+        updatePixelInfo();
+        updateInfo();
+        
+        // Focus viewport for keyboard shortcuts
+        canvasViewport.tabIndex = 0;
+        canvasViewport.focus();
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            updatePixelInfo();
+            updateInfo();
+            // Reposition master switch on orientation change
+            if (window.innerWidth <= 600) {
+                masterSwitch.style.left = '24px';
+            }
+        });
+        
+        // Hide font dropdown on scroll in sidebar
+        sidebar.addEventListener('scroll', () => {
+            document.getElementById("fontDropdown").style.display = "none";
+        });
+    });
+
+    // Handle orientation change for better mobile experience
+    window.addEventListener('orientationchange', function() {
+        setTimeout(() => {
+            centerWrapper();
+            updatePixelInfo();
+        }, 300);
+    });
+</script>
+
+</body>
+</html>
