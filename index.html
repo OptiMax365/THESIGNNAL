@@ -344,6 +344,11 @@
             align-items: center;
             justify-content: center;
             touch-action: none;
+            cursor: grab;
+        }
+        
+        .canvas-container.panning {
+            cursor: grabbing;
         }
 
         .canvas-wrapper {
@@ -355,6 +360,11 @@
             touch-action: none;
             transform-origin: 0 0;
             will-change: transform;
+            transition: transform 0.05s ease-out;
+        }
+        
+        .canvas-wrapper.dragging {
+            transition: none !important;
         }
 
         canvas {
@@ -943,7 +953,10 @@
     // Device detection
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 767;
     
-    // Initialize Fabric Canvas
+    // Track cursor position for cursor-centered zoom
+    let cursorPosition = { x: null, y: null };
+    
+    // Initialize Fabric Canvas - OPTIMIZED FOR SMOOTHNESS
     const canvas = new fabric.Canvas('designCanvas', {
         width: CW,
         height: CH,
@@ -956,14 +969,18 @@
         borderScaleFactor: 3,
         cornerColor: '#00d67a',
         cornerStrokeColor: '#ffffff',
-        cornerSize: isMobile ? 16 : 12,
+        cornerSize: isMobile ? 18 : 14,
         transparentCorners: false,
         centeredScaling: true,
         uniformScaling: true,
         stopContextMenu: true,
         hoverCursor: 'move',
         moveCursor: 'grab',
-        defaultCursor: 'default'
+        defaultCursor: 'default',
+        // Performance optimizations
+        renderOnAddRemove: true,
+        skipTargetFind: false,
+        interactive: true
     });
 
     // DOM References
@@ -982,12 +999,14 @@
     // Canvas position state (for panning)
     let canvasPosition = { x: 0, y: 0 };
     
-    // Drag state
+    // Drag state - IMPROVED FOR SMOOTHNESS
     let dragState = {
         active: false,
         startX: 0,
         startY: 0,
-        startPos: { x: 0, y: 0 }
+        startPos: { x: 0, y: 0 },
+        lastX: 0,
+        lastY: 0
     };
 
     // =========================
@@ -1033,8 +1052,8 @@
         const centerY = (containerRect.height - scaledHeight) / 2;
         
         // Apply with minimum margin for mobile safety
-        canvasPosition.x = Math.max(10, centerX);
-        canvasPosition.y = Math.max(10, centerY);
+        canvasPosition.x = Math.max(10, Math.min(centerX, containerRect.width - scaledWidth - 10));
+        canvasPosition.y = Math.max(10, Math.min(centerY, containerRect.height - scaledHeight - 10));
         
         applyCanvasTransform();
     }
@@ -1050,7 +1069,7 @@
         canvasWrapper.style.width = CW + 'px';
         canvasWrapper.style.height = CH + 'px';
         
-        // Re-center with current zoom
+        // Re-center with current zoom - KEY FIX: always center on resize
         centerCanvasInViewport();
         
         // Update displays
@@ -1064,32 +1083,41 @@
     }
 
     // =========================
-    // ZOOM FUNCTIONS - FIXED
+    // ZOOM FUNCTIONS - FIXED FOR CURSOR-CENTERED ZOOM
     // =========================
     function setZoom(newZoom, pivotX, pivotY) {
         const oldZoom = zoomLevel;
         zoomLevel = Math.max(0.1, Math.min(5, newZoom));
         
-        if (pivotX !== undefined && pivotY !== undefined && pivotX !== null) {
-            // Adjust position to zoom towards pivot point (for pinch zoom)
-            const containerRect = canvasContainer.getBoundingClientRect();
-            
-            // Convert screen coordinates to canvas coordinates at old zoom
-            const canvasX = (pivotX - containerRect.left - canvasPosition.x) / oldZoom;
-            const canvasY = (pivotY - containerRect.top - canvasPosition.y) / oldZoom;
-            
-            // Calculate new position to keep canvasX, canvasY at same screen position
-            canvasPosition.x = pivotX - containerRect.left - canvasX * zoomLevel;
-            canvasPosition.y = pivotY - containerRect.top - canvasY * zoomLevel;
+        // If no pivot provided, try to use cursor position, otherwise center the canvas
+        if (pivotX === undefined || pivotX === null || isNaN(pivotX)) {
+            // Use tracked cursor position if available, otherwise center
+            if (cursorPosition.x !== null && cursorPosition.y !== null) {
+                pivotX = cursorPosition.x;
+                pivotY = cursorPosition.y;
+            } else {
+                centerCanvasInViewport();
+                applyCanvasTransform();
+                updateZoomDisplay();
+                if (gridVisible) drawGrid();
+                canvas.renderAll();
+                return;
+            }
         }
         
-        applyCanvasTransform();
+        // Adjust position to zoom towards pivot point
+        const containerRect = canvasContainer.getBoundingClientRect();
         
-        // Update displays
-        const zoomPercent = Math.round(zoomLevel * 100);
-        document.getElementById('zoomDisplay').textContent = zoomPercent + '%';
-        document.getElementById('info-zoom').textContent = zoomPercent + '%';
-        document.getElementById('canvasInfo').textContent = `${CW} × ${CH} • ${zoomPercent}%`;
+        // Convert screen coordinates to canvas coordinates at old zoom
+        const canvasX = (pivotX - containerRect.left - canvasPosition.x) / oldZoom;
+        const canvasY = (pivotY - containerRect.top - canvasPosition.y) / oldZoom;
+        
+        // Calculate new position to keep canvasX, canvasY at same screen position
+        canvasPosition.x = pivotX - containerRect.left - canvasX * zoomLevel;
+        canvasPosition.y = pivotY - containerRect.top - canvasY * zoomLevel;
+        
+        applyCanvasTransform();
+        updateZoomDisplay();
         
         // Redraw grid if visible
         if (gridVisible) drawGrid();
@@ -1097,8 +1125,23 @@
         canvas.renderAll();
     }
 
-    function zoomIn() { setZoom(zoomLevel * 1.25); }
-    function zoomOut() { setZoom(zoomLevel / 1.25); }
+    function updateZoomDisplay() {
+        const zoomPercent = Math.round(zoomLevel * 100);
+        document.getElementById('zoomDisplay').textContent = zoomPercent + '%';
+        document.getElementById('info-zoom').textContent = zoomPercent + '%';
+        document.getElementById('canvasInfo').textContent = `${CW} × ${CH} • ${zoomPercent}%`;
+    }
+
+    function zoomIn() { 
+        // Button zoom - use cursor position as pivot for cursor-centered zoom
+        setZoom(zoomLevel * 1.25, cursorPosition.x, cursorPosition.y); 
+    }
+    
+    function zoomOut() { 
+        // Button zoom - use cursor position as pivot for cursor-centered zoom
+        setZoom(zoomLevel / 1.25, cursorPosition.x, cursorPosition.y); 
+    }
+    
     function resetZoom() { 
         zoomLevel = 1;
         centerCanvasInViewport();
@@ -1260,25 +1303,14 @@
     });
 
     // =========================
-    // OBJECT CREATION - FIXED POSITIONING
+    // OBJECT CREATION - FIXED: ALWAYS AT WORKSPACE CENTER (CW/2, CH/2)
     // =========================
     
-    function getVisualCanvasCenter() {
-        // Get the visual center of the visible canvas area in canvas coordinates
-        const containerRect = canvasContainer.getBoundingClientRect();
-        
-        // Screen coordinates of viewport center
-        const screenCenterX = containerRect.left + containerRect.width / 2;
-        const screenCenterY = containerRect.top + containerRect.height / 2;
-        
-        // Convert to canvas coordinates (accounting for position and zoom)
-        const canvasX = (screenCenterX - containerRect.left - canvasPosition.x) / zoomLevel;
-        const canvasY = (screenCenterY - containerRect.top - canvasPosition.y) / zoomLevel;
-        
-        // Clamp to canvas bounds
+    function getWorkspaceCenter() {
+        // Return the ABSOLUTE center of the canvas workspace - not viewport dependent
         return {
-            x: Math.max(0, Math.min(CW, canvasX)),
-            y: Math.max(0, Math.min(CH, canvasY))
+            x: CW / 2,
+            y: CH / 2
         };
     }
 
@@ -1287,7 +1319,8 @@
         const size = parseInt(document.getElementById('fontSize').value) || 48;
         const color = document.getElementById('textColor').value;
         
-        const { x, y } = getVisualCanvasCenter();
+        // Use workspace center - absolute canvas coordinates
+        const { x, y } = getWorkspaceCenter();
         
         const text = new fabric.IText('Double-tap to edit', {
             left: x,
@@ -1297,9 +1330,11 @@
             fill: color,
             originX: 'center',
             originY: 'center',
-            cornerSize: isMobile ? 16 : 12,
+            cornerSize: isMobile ? 18 : 14,
             selectable: !dragMode,
-            evented: !dragMode
+            evented: !dragMode,
+            // Smooth rendering
+            objectCaching: true
         });
         
         canvas.add(text);
@@ -1312,7 +1347,8 @@
         const fill = document.getElementById('shapeFill').value;
         const stroke = document.getElementById('shapeStroke').value;
         
-        const { x, y } = getVisualCanvasCenter();
+        // Use workspace center - absolute canvas coordinates
+        const { x, y } = getWorkspaceCenter();
         
         const rect = new fabric.Rect({
             left: x,
@@ -1324,9 +1360,10 @@
             strokeWidth: 2,
             originX: 'center',
             originY: 'center',
-            cornerSize: isMobile ? 16 : 12,
+            cornerSize: isMobile ? 18 : 14,
             selectable: !dragMode,
-            evented: !dragMode
+            evented: !dragMode,
+            objectCaching: true
         });
         
         canvas.add(rect);
@@ -1339,7 +1376,8 @@
         const fill = document.getElementById('shapeFill').value;
         const stroke = document.getElementById('shapeStroke').value;
         
-        const { x, y } = getVisualCanvasCenter();
+        // Use workspace center - absolute canvas coordinates
+        const { x, y } = getWorkspaceCenter();
         
         const circle = new fabric.Circle({
             left: x,
@@ -1350,9 +1388,10 @@
             strokeWidth: 2,
             originX: 'center',
             originY: 'center',
-            cornerSize: isMobile ? 16 : 12,
+            cornerSize: isMobile ? 18 : 14,
             selectable: !dragMode,
-            evented: !dragMode
+            evented: !dragMode,
+            objectCaching: true
         });
         
         canvas.add(circle);
@@ -1365,7 +1404,8 @@
         const fill = document.getElementById('shapeFill').value;
         const stroke = document.getElementById('shapeStroke').value;
         
-        const { x, y } = getVisualCanvasCenter();
+        // Use workspace center - absolute canvas coordinates
+        const { x, y } = getWorkspaceCenter();
         
         const triangle = new fabric.Triangle({
             left: x,
@@ -1377,9 +1417,10 @@
             strokeWidth: 2,
             originX: 'center',
             originY: 'center',
-            cornerSize: isMobile ? 16 : 12,
+            cornerSize: isMobile ? 18 : 14,
             selectable: !dragMode,
-            evented: !dragMode
+            evented: !dragMode,
+            objectCaching: true
         });
         
         canvas.add(triangle);
@@ -1410,7 +1451,8 @@
                 
                 const borderColor = document.getElementById('selectionColor').value;
                 
-                const { x, y } = getVisualCanvasCenter();
+                // Use workspace center - absolute canvas coordinates
+                const { x, y } = getWorkspaceCenter();
                 
                 img.set({
                     left: x,
@@ -1419,12 +1461,13 @@
                     originY: 'center',
                     scaleX: scale,
                     scaleY: scale,
-                    cornerSize: isMobile ? 16 : 12,
+                    cornerSize: isMobile ? 18 : 14,
                     borderColor: borderColor,
                     cornerColor: borderColor,
                     cornerStrokeColor: '#ffffff',
                     selectable: !dragMode,
-                    evented: !dragMode
+                    evented: !dragMode,
+                    objectCaching: true
                 });
                 
                 canvas.add(img);
@@ -1502,7 +1545,7 @@
     }
 
     // =========================
-    // DRAG MODE & CANVAS PANNING - FIXED 1:1 MOVEMENT
+    // DRAG MODE & CANVAS PANNING - ALWAYS WORKS, SMOOTH 1:1
     // =========================
     function toggleDragMode() {
         dragMode = !dragMode;
@@ -1524,24 +1567,40 @@
         updateObjectInfo();
     }
 
-    // Canvas drag handling - 1:1 movement in screen space
+    // Canvas drag handling - ALWAYS WORKS, SMOOTH 1:1 MOVEMENT
     function startDrag(e) {
-        if (!dragMode) return;
-        // Ignore if clicking on interactive elements
-        if (e.target.closest('.canvas-handle, input, button, .dropdown, .topbar-btn')) return;
+        // Allow panning always when dragging empty workspace
+        // Only prevent if clicking on interactive UI elements
+        if (e.target.closest('.canvas-handle, input, button, .dropdown, .topbar-btn, .sidebar')) return;
         
+        // Prevent default to avoid scroll on mobile
         e.preventDefault();
         
         const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
         const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
         
-        dragState.active = true;
-        dragState.startX = clientX;
-        dragState.startY = clientY;
-        dragState.startPos = { ...canvasPosition };
+        // Track cursor position for zoom pivot
+        cursorPosition.x = clientX;
+        cursorPosition.y = clientY;
         
-        canvasWrapper.style.cursor = 'grabbing';
-        canvasWrapper.style.transition = 'none'; // Disable transition during drag for smooth movement
+        // Check if clicking on a selectable object - if so, let fabric handle it
+        const pointer = canvas.getPointer(e);
+        const target = canvas.findTarget(e);
+        
+        // If in drag mode OR no object under pointer, start panning
+        if (dragMode || !target || !target.selectable) {
+            dragState.active = true;
+            dragState.startX = clientX;
+            dragState.startY = clientY;
+            dragState.startPos = { ...canvasPosition };
+            dragState.lastX = clientX;
+            dragState.lastY = clientY;
+            
+            // Visual feedback
+            canvasContainer.classList.add('panning');
+            canvasWrapper.classList.add('dragging');
+            canvasWrapper.style.transition = 'none'; // Disable transition for immediate response
+        }
     }
 
     function onDrag(e) {
@@ -1551,21 +1610,32 @@
         const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
         const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
         
-        // 1:1 movement - direct delta application in screen space
-        const dx = clientX - dragState.startX;
-        const dy = clientY - dragState.startY;
+        // Track cursor position for zoom pivot
+        cursorPosition.x = clientX;
+        cursorPosition.y = clientY;
         
-        canvasPosition.x = dragState.startPos.x + dx;
-        canvasPosition.y = dragState.startPos.y + dy;
+        // 1:1 movement - direct delta application in screen space for immediacy
+        const dx = clientX - dragState.lastX;
+        const dy = clientY - dragState.lastY;
         
+        // Update position immediately
+        canvasPosition.x += dx;
+        canvasPosition.y += dy;
+        
+        // Update last position for next frame
+        dragState.lastX = clientX;
+        dragState.lastY = clientY;
+        
+        // Apply transform immediately without transition
         applyCanvasTransform();
     }
 
     function endDrag() {
         if (dragState.active) {
             dragState.active = false;
-            canvasWrapper.style.cursor = dragMode ? 'grab' : 'default';
-            canvasWrapper.style.transition = ''; // Re-enable transition
+            canvasContainer.classList.remove('panning');
+            canvasWrapper.classList.remove('dragging');
+            canvasWrapper.style.transition = ''; // Re-enable transition for other animations
         }
     }
 
@@ -1575,7 +1645,9 @@
             active: false,
             startX: 0,
             startY: 0,
-            startPos: { x: 0, y: 0 }
+            startPos: { x: 0, y: 0 },
+            lastX: 0,
+            lastY: 0
         };
         
         function startHandleDrag(e) {
@@ -1589,7 +1661,10 @@
             handleDragState.startX = clientX;
             handleDragState.startY = clientY;
             handleDragState.startPos = { ...canvasPosition };
+            handleDragState.lastX = clientX;
+            handleDragState.lastY = clientY;
             
+            canvasWrapper.classList.add('dragging');
             canvasWrapper.style.transition = 'none';
         }
         
@@ -1600,12 +1675,19 @@
             const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
             const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
             
-            // 1:1 movement
-            const dx = clientX - handleDragState.startX;
-            const dy = clientY - handleDragState.startY;
+            // Track cursor position for zoom pivot
+            cursorPosition.x = clientX;
+            cursorPosition.y = clientY;
             
-            canvasPosition.x = handleDragState.startPos.x + dx;
-            canvasPosition.y = handleDragState.startPos.y + dy;
+            // 1:1 movement for immediate response
+            const dx = clientX - handleDragState.lastX;
+            const dy = clientY - handleDragState.lastY;
+            
+            canvasPosition.x += dx;
+            canvasPosition.y += dy;
+            
+            handleDragState.lastX = clientX;
+            handleDragState.lastY = clientY;
             
             applyCanvasTransform();
         }
@@ -1613,6 +1695,7 @@
         function endHandleDrag() {
             if (handleDragState.active) {
                 handleDragState.active = false;
+                canvasWrapper.classList.remove('dragging');
                 canvasWrapper.style.transition = '';
             }
         }
@@ -1666,6 +1749,10 @@
                 const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
                 const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
                 
+                // Track cursor position
+                cursorPosition.x = centerX;
+                cursorPosition.y = centerY;
+                
                 setZoom(newZoom, centerX, centerY);
             }
         }, { passive: false });
@@ -1676,14 +1763,31 @@
             }
         });
         
-        // Mouse wheel zoom (desktop)
+        // Mouse wheel zoom (desktop) - cursor-centered
         canvasContainer.addEventListener('wheel', function(e) {
             if (e.ctrlKey || e.metaKey) {
                 e.preventDefault();
                 const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                // Track cursor position for zoom pivot
+                cursorPosition.x = e.clientX;
+                cursorPosition.y = e.clientY;
                 setZoom(zoomLevel * delta, e.clientX, e.clientY);
             }
         }, { passive: false });
+        
+        // Track mouse movement for cursor position
+        canvasContainer.addEventListener('mousemove', function(e) {
+            cursorPosition.x = e.clientX;
+            cursorPosition.y = e.clientY;
+        });
+        
+        // Track touch movement for cursor position
+        canvasContainer.addEventListener('touchmove', function(e) {
+            if (e.touches[0]) {
+                cursorPosition.x = e.touches[0].clientX;
+                cursorPosition.y = e.touches[0].clientY;
+            }
+        }, { passive: true });
     }
 
     // =========================
@@ -1859,7 +1963,7 @@
             deleteSelected();
         }
         
-        // Zoom shortcuts
+        // Zoom shortcuts - cursor-centered
         if (e.ctrlKey || e.metaKey) {
             if (e.key === '+' || e.key === '=') {
                 e.preventDefault();
@@ -1921,7 +2025,7 @@
             masterSwitch.style.bottom = 'calc(48px + env(safe-area-inset-bottom))';
         }
         
-        // Event listeners for dragging
+        // Event listeners for dragging - KEY FIX: panning always works on workspace
         canvasContainer.addEventListener('mousedown', startDrag);
         canvasContainer.addEventListener('touchstart', startDrag, { passive: false });
         document.addEventListener('mousemove', onDrag);
@@ -1947,7 +2051,7 @@
         updateCanvasInfo();
         updateObjectInfo();
         
-        console.log('✅ Design Studio initialized - Fixed dragging & positioning');
+        console.log('✅ Design Studio initialized - Cursor-centered zoom & workspace-centered object placement FIXED');
     });
 
     // Prevent pull-to-refresh when interacting with canvas
