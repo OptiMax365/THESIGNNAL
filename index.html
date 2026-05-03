@@ -142,7 +142,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
-        /* Color picker buttons */
+        /* Color picker buttons - FIXED VISIBILITY */
         .color-btn {
             width: 36px !important;
             height: 36px !important;
@@ -153,18 +153,20 @@
             position: relative !important;
             overflow: hidden !important;
             flex-shrink: 0 !important;
+            cursor: pointer !important;
         }
         
         .color-btn input[type="color"] {
             position: absolute;
-            width: 100%;
-            height: 100%;
+            width: 200%;
+            height: 200%;
             opacity: 0;
             cursor: pointer;
             padding: 0;
             border: none;
-            top: 0;
-            left: 0;
+            top: -50%;
+            left: -50%;
+            margin: 0;
         }
         
         .color-btn::after {
@@ -630,10 +632,13 @@
             
             .sidebar-color-btn input[type="color"] {
                 position: absolute;
-                width: 100%;
-                height: 100%;
+                width: 200%;
+                height: 200%;
                 opacity: 0;
                 cursor: pointer;
+                top: -50%;
+                left: -50%;
+                margin: 0;
             }
             
             .sidebar-color-btn::after {
@@ -953,8 +958,14 @@
     // Device detection
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 767;
     
-    // Track cursor position for cursor-centered zoom
-    let cursorPosition = { x: null, y: null };
+    // Track cursor/pivot position for zoom
+    let pivotPosition = { x: null, y: null };
+    
+    // Color defaults for new objects
+    let defaultTextColor = '#000000';
+    let defaultShapeFill = '#4CAF50';
+    let defaultShapeStroke = '#000000';
+    let defaultSelectionColor = '#00d67a';
     
     // Initialize Fabric Canvas - OPTIMIZED FOR SMOOTHNESS
     const canvas = new fabric.Canvas('designCanvas', {
@@ -965,9 +976,9 @@
         enableRetinaScaling: true,
         skipOffscreen: true,
         selection: true,
-        borderColor: '#00d67a',
+        borderColor: defaultSelectionColor,
         borderScaleFactor: 3,
-        cornerColor: '#00d67a',
+        cornerColor: defaultSelectionColor,
         cornerStrokeColor: '#ffffff',
         cornerSize: isMobile ? 18 : 14,
         transparentCorners: false,
@@ -1008,6 +1019,16 @@
         lastX: 0,
         lastY: 0
     };
+
+    // =========================
+    // COLOR SYNC UTILITY - KEY FIX
+    // =========================
+    function syncColorInputs(topbarId, sidebarId, value) {
+        const topbarInput = document.getElementById(topbarId);
+        const sidebarInput = document.getElementById(sidebarId);
+        if (topbarInput && topbarInput.value !== value) topbarInput.value = value;
+        if (sidebarInput && sidebarInput.value !== value) sidebarInput.value = value;
+    }
 
     // =========================
     // CORE POSITIONING & ZOOM - FIXED APPROACH
@@ -1083,38 +1104,32 @@
     }
 
     // =========================
-    // ZOOM FUNCTIONS - FIXED FOR CURSOR-CENTERED ZOOM
+    // ZOOM FUNCTIONS - FIXED FOR CURSOR/PINCH-CENTERED ZOOM
     // =========================
-    function setZoom(newZoom, pivotX, pivotY) {
+    function setZoom(newZoom, pivotScreenX, pivotScreenY) {
         const oldZoom = zoomLevel;
         zoomLevel = Math.max(0.1, Math.min(5, newZoom));
         
-        // If no pivot provided, try to use cursor position, otherwise center the canvas
-        if (pivotX === undefined || pivotX === null || isNaN(pivotX)) {
-            // Use tracked cursor position if available, otherwise center
-            if (cursorPosition.x !== null && cursorPosition.y !== null) {
-                pivotX = cursorPosition.x;
-                pivotY = cursorPosition.y;
-            } else {
-                centerCanvasInViewport();
-                applyCanvasTransform();
-                updateZoomDisplay();
-                if (gridVisible) drawGrid();
-                canvas.renderAll();
-                return;
-            }
+        // If no valid pivot provided, center the canvas
+        if (pivotScreenX === undefined || pivotScreenX === null || isNaN(pivotScreenX) ||
+            pivotScreenY === undefined || pivotScreenY === null || isNaN(pivotScreenY)) {
+            centerCanvasInViewport();
+            applyCanvasTransform();
+            updateZoomDisplay();
+            if (gridVisible) drawGrid();
+            canvas.renderAll();
+            return;
         }
         
-        // Adjust position to zoom towards pivot point
         const containerRect = canvasContainer.getBoundingClientRect();
         
-        // Convert screen coordinates to canvas coordinates at old zoom
-        const canvasX = (pivotX - containerRect.left - canvasPosition.x) / oldZoom;
-        const canvasY = (pivotY - containerRect.top - canvasPosition.y) / oldZoom;
+        // Convert screen pivot to canvas coordinates at OLD zoom
+        const canvasPivotX = (pivotScreenX - containerRect.left - canvasPosition.x) / oldZoom;
+        const canvasPivotY = (pivotScreenY - containerRect.top - canvasPosition.y) / oldZoom;
         
-        // Calculate new position to keep canvasX, canvasY at same screen position
-        canvasPosition.x = pivotX - containerRect.left - canvasX * zoomLevel;
-        canvasPosition.y = pivotY - containerRect.top - canvasY * zoomLevel;
+        // Calculate new position so canvasPivot stays at same screen position after zoom
+        canvasPosition.x = pivotScreenX - containerRect.left - canvasPivotX * zoomLevel;
+        canvasPosition.y = pivotScreenY - containerRect.top - canvasPivotY * zoomLevel;
         
         applyCanvasTransform();
         updateZoomDisplay();
@@ -1133,13 +1148,11 @@
     }
 
     function zoomIn() { 
-        // Button zoom - use cursor position as pivot for cursor-centered zoom
-        setZoom(zoomLevel * 1.25, cursorPosition.x, cursorPosition.y); 
+        setZoom(zoomLevel * 1.25, pivotPosition.x, pivotPosition.y); 
     }
     
     function zoomOut() { 
-        // Button zoom - use cursor position as pivot for cursor-centered zoom
-        setZoom(zoomLevel / 1.25, cursorPosition.x, cursorPosition.y); 
+        setZoom(zoomLevel / 1.25, pivotPosition.x, pivotPosition.y); 
     }
     
     function resetZoom() { 
@@ -1193,51 +1206,90 @@
     }
 
     // =========================
-    // BACKGROUND COLORS
+    // BACKGROUND COLORS - FIXED SYNC
     // =========================
     function applyMainBg() {
-        const color = document.getElementById('mainBgColor').value;
-        document.getElementById('sidebarMainBg').value = color;
+        const topbarInput = document.getElementById('mainBgColor');
+        const sidebarInput = document.getElementById('sidebarMainBg');
+        const color = topbarInput ? topbarInput.value : (sidebarInput ? sidebarInput.value : '#f0f2f5');
+        
+        // Sync both inputs
+        syncColorInputs('mainBgColor', 'sidebarMainBg', color);
+        
+        // Apply to workspace background
         canvasContainer.style.background = color;
     }
 
     function applyCanvasBg() {
-        const color = document.getElementById('canvasBgColor').value;
-        document.getElementById('sidebarCanvasBg').value = color;
+        const topbarInput = document.getElementById('canvasBgColor');
+        const sidebarInput = document.getElementById('sidebarCanvasBg');
+        const color = topbarInput ? topbarInput.value : (sidebarInput ? sidebarInput.value : '#ffffff');
+        
+        // Sync both inputs
+        syncColorInputs('canvasBgColor', 'sidebarCanvasBg', color);
+        
+        // Apply to canvas background
         canvas.setBackgroundColor(color, canvas.renderAll.bind(canvas));
     }
 
     // =========================
-    // TEXT & SHAPE STYLING
+    // TEXT & SHAPE STYLING - FIXED APPLICATION
     // =========================
     function applyTextColor() {
-        const color = document.getElementById('textColor').value;
-        document.getElementById('sidebarTextColor').value = color;
+        const topbarInput = document.getElementById('textColor');
+        const sidebarInput = document.getElementById('sidebarTextColor');
+        const color = topbarInput ? topbarInput.value : (sidebarInput ? sidebarInput.value : defaultTextColor);
         
-        const obj = canvas.getActiveObject();
-        if (obj && ['i-text', 'text', 'textbox'].includes(obj.type)) {
-            obj.set('fill', color);
+        // Sync both inputs and update default
+        syncColorInputs('textColor', 'sidebarTextColor', color);
+        defaultTextColor = color;
+        
+        // Apply to selected text object(s)
+        const activeObjects = canvas.getActiveObjects();
+        if (activeObjects.length > 0) {
+            activeObjects.forEach(obj => {
+                if (['i-text', 'text', 'textbox'].includes(obj.type)) {
+                    obj.set('fill', color);
+                }
+            });
             canvas.requestRenderAll();
             updateObjectInfo();
         }
     }
 
     function applyShapeStyle() {
-        const fill = document.getElementById('shapeFill').value;
-        const stroke = document.getElementById('shapeStroke').value;
-        document.getElementById('sidebarShapeFill').value = fill;
-        document.getElementById('sidebarShapeStroke').value = stroke;
+        const fillInput = document.getElementById('shapeFill');
+        const strokeInput = document.getElementById('shapeStroke');
+        const fill = fillInput ? fillInput.value : defaultShapeFill;
+        const stroke = strokeInput ? strokeInput.value : defaultShapeStroke;
         
-        const obj = canvas.getActiveObject();
-        if (obj && !['i-text', 'text', 'textbox', 'image'].includes(obj.type)) {
-            obj.set({ fill: fill, stroke: stroke, strokeWidth: 2 });
+        // Sync inputs and update defaults
+        syncColorInputs('shapeFill', 'sidebarShapeFill', fill);
+        syncColorInputs('shapeStroke', 'sidebarShapeStroke', stroke);
+        defaultShapeFill = fill;
+        defaultShapeStroke = stroke;
+        
+        // Apply to selected shape object(s)
+        const activeObjects = canvas.getActiveObjects();
+        if (activeObjects.length > 0) {
+            activeObjects.forEach(obj => {
+                if (!['i-text', 'text', 'textbox', 'image', 'group'].includes(obj.type)) {
+                    obj.set({ fill: fill, stroke: stroke, strokeWidth: 2 });
+                }
+            });
             canvas.requestRenderAll();
             updateObjectInfo();
         }
     }
 
     function applySelectionStyle() {
-        const color = document.getElementById('selectionColor').value;
+        const colorInput = document.getElementById('selectionColor');
+        const color = colorInput ? colorInput.value : defaultSelectionColor;
+        
+        // Update default
+        defaultSelectionColor = color;
+        
+        // Apply to all objects' selection borders
         canvas.forEachObject(obj => {
             obj.set({
                 borderColor: color,
@@ -1245,23 +1297,39 @@
                 cornerStrokeColor: '#ffffff'
             });
         });
+        // Also update canvas selection border
+        canvas.set({
+            borderColor: color,
+            cornerColor: color,
+            cornerStrokeColor: '#ffffff'
+        });
         canvas.renderAll();
     }
 
     function changeFontSize() {
-        const size = parseInt(document.getElementById('fontSize').value) || 48;
-        document.getElementById('sidebarFontSize').value = size;
+        const topbarInput = document.getElementById('fontSize');
+        const sidebarInput = document.getElementById('sidebarFontSize');
+        const size = parseInt(topbarInput ? topbarInput.value : (sidebarInput ? sidebarInput.value : '48')) || 48;
         
-        const obj = canvas.getActiveObject();
-        if (obj && ['i-text', 'text', 'textbox'].includes(obj.type)) {
-            obj.set('fontSize', size);
+        // Sync both inputs
+        if (topbarInput) topbarInput.value = size;
+        if (sidebarInput) sidebarInput.value = size;
+        
+        // Apply to selected text object(s)
+        const activeObjects = canvas.getActiveObjects();
+        if (activeObjects.length > 0) {
+            activeObjects.forEach(obj => {
+                if (['i-text', 'text', 'textbox'].includes(obj.type)) {
+                    obj.set('fontSize', size);
+                }
+            });
             canvas.requestRenderAll();
             updateObjectInfo();
         }
     }
 
     function setFont(font) {
-        // Update dropdown display
+        // Update dropdown displays
         document.querySelectorAll('.dropdown-trigger').forEach(el => {
             el.innerHTML = font + ' <span style="margin-left:auto">▼</span>';
         });
@@ -1271,10 +1339,14 @@
             menu.classList.remove('active');
         });
         
-        // Apply to selected text object
-        const obj = canvas.getActiveObject();
-        if (obj && ['i-text', 'text', 'textbox'].includes(obj.type)) {
-            obj.set('fontFamily', font);
+        // Apply to selected text object(s)
+        const activeObjects = canvas.getActiveObjects();
+        if (activeObjects.length > 0) {
+            activeObjects.forEach(obj => {
+                if (['i-text', 'text', 'textbox'].includes(obj.type)) {
+                    obj.set('fontFamily', font);
+                }
+            });
             canvas.renderAll();
             updateObjectInfo();
         }
@@ -1303,23 +1375,20 @@
     });
 
     // =========================
-    // OBJECT CREATION - FIXED: ALWAYS AT WORKSPACE CENTER (CW/2, CH/2)
+    // OBJECT CREATION - FIXED: ALWAYS AT WORKSPACE CENTER
     // =========================
     
     function getWorkspaceCenter() {
-        // Return the ABSOLUTE center of the canvas workspace - not viewport dependent
-        return {
-            x: CW / 2,
-            y: CH / 2
-        };
+        return { x: CW / 2, y: CH / 2 };
     }
 
     function addText() {
-        const font = document.querySelector('.dropdown-trigger')?.innerText.replace(' ▼', '').trim() || 'Arial';
-        const size = parseInt(document.getElementById('fontSize').value) || 48;
-        const color = document.getElementById('textColor').value;
+        const fontDropdown = document.querySelector('.dropdown-trigger');
+        const font = fontDropdown ? fontDropdown.innerText.replace(' ▼', '').trim() : 'Arial';
+        const sizeInput = document.getElementById('fontSize');
+        const size = parseInt(sizeInput ? sizeInput.value : '48') || 48;
+        const color = defaultTextColor;
         
-        // Use workspace center - absolute canvas coordinates
         const { x, y } = getWorkspaceCenter();
         
         const text = new fabric.IText('Double-tap to edit', {
@@ -1333,7 +1402,6 @@
             cornerSize: isMobile ? 18 : 14,
             selectable: !dragMode,
             evented: !dragMode,
-            // Smooth rendering
             objectCaching: true
         });
         
@@ -1344,10 +1412,6 @@
     }
 
     function addRectangle() {
-        const fill = document.getElementById('shapeFill').value;
-        const stroke = document.getElementById('shapeStroke').value;
-        
-        // Use workspace center - absolute canvas coordinates
         const { x, y } = getWorkspaceCenter();
         
         const rect = new fabric.Rect({
@@ -1355,8 +1419,8 @@
             top: y,
             width: 200,
             height: 120,
-            fill: fill,
-            stroke: stroke,
+            fill: defaultShapeFill,
+            stroke: defaultShapeStroke,
             strokeWidth: 2,
             originX: 'center',
             originY: 'center',
@@ -1373,18 +1437,14 @@
     }
 
     function addCircle() {
-        const fill = document.getElementById('shapeFill').value;
-        const stroke = document.getElementById('shapeStroke').value;
-        
-        // Use workspace center - absolute canvas coordinates
         const { x, y } = getWorkspaceCenter();
         
         const circle = new fabric.Circle({
             left: x,
             top: y,
             radius: 70,
-            fill: fill,
-            stroke: stroke,
+            fill: defaultShapeFill,
+            stroke: defaultShapeStroke,
             strokeWidth: 2,
             originX: 'center',
             originY: 'center',
@@ -1401,10 +1461,6 @@
     }
 
     function addTriangle() {
-        const fill = document.getElementById('shapeFill').value;
-        const stroke = document.getElementById('shapeStroke').value;
-        
-        // Use workspace center - absolute canvas coordinates
         const { x, y } = getWorkspaceCenter();
         
         const triangle = new fabric.Triangle({
@@ -1412,8 +1468,8 @@
             top: y,
             width: 140,
             height: 140,
-            fill: fill,
-            stroke: stroke,
+            fill: defaultShapeFill,
+            stroke: defaultShapeStroke,
             strokeWidth: 2,
             originX: 'center',
             originY: 'center',
@@ -1444,14 +1500,10 @@
         const reader = new FileReader();
         reader.onload = function(ev) {
             fabric.Image.fromURL(ev.target.result, function(img) {
-                // Scale image to fit canvas reasonably
                 const maxW = CW * 0.7;
                 const maxH = CH * 0.7;
                 const scale = Math.min(maxW / img.width, maxH / img.height, 1);
                 
-                const borderColor = document.getElementById('selectionColor').value;
-                
-                // Use workspace center - absolute canvas coordinates
                 const { x, y } = getWorkspaceCenter();
                 
                 img.set({
@@ -1462,8 +1514,8 @@
                     scaleX: scale,
                     scaleY: scale,
                     cornerSize: isMobile ? 18 : 14,
-                    borderColor: borderColor,
-                    cornerColor: borderColor,
+                    borderColor: defaultSelectionColor,
+                    cornerColor: defaultSelectionColor,
                     cornerStrokeColor: '#ffffff',
                     selectable: !dragMode,
                     evented: !dragMode,
@@ -1519,11 +1571,8 @@
     }
 
     function downloadPNG() {
-        // Temporarily hide grid for export
         const wasVisible = gridVisible;
-        if (wasVisible) {
-            gridOverlay.style.display = 'none';
-        }
+        if (wasVisible) gridOverlay.style.display = 'none';
         
         const dataURL = canvas.toDataURL({
             format: 'png',
@@ -1538,56 +1587,44 @@
         a.click();
         document.body.removeChild(a);
         
-        // Restore grid
-        if (wasVisible) {
-            gridOverlay.style.display = 'block';
-        }
+        if (wasVisible) gridOverlay.style.display = 'block';
     }
 
     // =========================
-    // DRAG MODE & CANVAS PANNING - ALWAYS WORKS, SMOOTH 1:1
+    // DRAG MODE & CANVAS PANNING
     // =========================
     function toggleDragMode() {
         dragMode = !dragMode;
         document.getElementById('modeInfo').textContent = dragMode ? 'Pan Mode' : 'Select Mode';
         
-        // Update canvas interaction
         canvas.selection = !dragMode;
         canvas.forEachObject(obj => {
             obj.selectable = !dragMode;
             obj.evented = !dragMode;
         });
         
-        // Update cursor
         canvasWrapper.style.cursor = dragMode ? 'grab' : 'default';
         
-        // Deselect any active object
         canvas.discardActiveObject();
         canvas.requestRenderAll();
         updateObjectInfo();
     }
 
-    // Canvas drag handling - ALWAYS WORKS, SMOOTH 1:1 MOVEMENT
     function startDrag(e) {
-        // Allow panning always when dragging empty workspace
-        // Only prevent if clicking on interactive UI elements
         if (e.target.closest('.canvas-handle, input, button, .dropdown, .topbar-btn, .sidebar')) return;
         
-        // Prevent default to avoid scroll on mobile
         e.preventDefault();
         
         const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
         const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
         
-        // Track cursor position for zoom pivot
-        cursorPosition.x = clientX;
-        cursorPosition.y = clientY;
+        // Track pivot position for zoom
+        pivotPosition.x = clientX;
+        pivotPosition.y = clientY;
         
-        // Check if clicking on a selectable object - if so, let fabric handle it
         const pointer = canvas.getPointer(e);
         const target = canvas.findTarget(e);
         
-        // If in drag mode OR no object under pointer, start panning
         if (dragMode || !target || !target.selectable) {
             dragState.active = true;
             dragState.startX = clientX;
@@ -1596,10 +1633,9 @@
             dragState.lastX = clientX;
             dragState.lastY = clientY;
             
-            // Visual feedback
             canvasContainer.classList.add('panning');
             canvasWrapper.classList.add('dragging');
-            canvasWrapper.style.transition = 'none'; // Disable transition for immediate response
+            canvasWrapper.style.transition = 'none';
         }
     }
 
@@ -1610,23 +1646,19 @@
         const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
         const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
         
-        // Track cursor position for zoom pivot
-        cursorPosition.x = clientX;
-        cursorPosition.y = clientY;
+        // Track pivot position for zoom
+        pivotPosition.x = clientX;
+        pivotPosition.y = clientY;
         
-        // 1:1 movement - direct delta application in screen space for immediacy
         const dx = clientX - dragState.lastX;
         const dy = clientY - dragState.lastY;
         
-        // Update position immediately
         canvasPosition.x += dx;
         canvasPosition.y += dy;
         
-        // Update last position for next frame
         dragState.lastX = clientX;
         dragState.lastY = clientY;
         
-        // Apply transform immediately without transition
         applyCanvasTransform();
     }
 
@@ -1635,11 +1667,10 @@
             dragState.active = false;
             canvasContainer.classList.remove('panning');
             canvasWrapper.classList.remove('dragging');
-            canvasWrapper.style.transition = ''; // Re-enable transition for other animations
+            canvasWrapper.style.transition = '';
         }
     }
 
-    // Canvas handle drag (for dedicated drag handle) - also 1:1
     function setupCanvasHandle() {
         let handleDragState = {
             active: false,
@@ -1675,11 +1706,9 @@
             const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
             const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
             
-            // Track cursor position for zoom pivot
-            cursorPosition.x = clientX;
-            cursorPosition.y = clientY;
+            pivotPosition.x = clientX;
+            pivotPosition.y = clientY;
             
-            // 1:1 movement for immediate response
             const dx = clientX - handleDragState.lastX;
             const dy = clientY - handleDragState.lastY;
             
@@ -1700,12 +1729,10 @@
             }
         }
         
-        // Mouse events
         canvasHandle.addEventListener('mousedown', startHandleDrag);
         document.addEventListener('mousemove', onHandleDrag);
         document.addEventListener('mouseup', endHandleDrag);
         
-        // Touch events
         canvasHandle.addEventListener('touchstart', startHandleDrag, { passive: false });
         document.addEventListener('touchmove', onHandleDrag, { passive: false });
         document.addEventListener('touchend', endHandleDrag);
@@ -1713,7 +1740,7 @@
     }
 
     // =========================
-    // TOUCH & PINCH ZOOM SUPPORT
+    // TOUCH & PINCH ZOOM SUPPORT - FIXED PIVOT LOGIC
     // =========================
     function setupTouchGestures() {
         let touchState = {
@@ -1735,6 +1762,10 @@
                 touchState.isPinching = true;
                 touchState.startDistance = getDistance(e.touches);
                 touchState.startZoom = zoomLevel;
+                
+                // Set pivot to midpoint of two fingers (mobile requirement)
+                pivotPosition.x = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                pivotPosition.y = (e.touches[0].clientY + e.touches[1].clientY) / 2;
             }
         }, { passive: false });
         
@@ -1745,13 +1776,12 @@
                 const scale = currentDistance / touchState.startDistance;
                 const newZoom = touchState.startZoom * scale;
                 
-                // Calculate center point between fingers for pivot zoom
+                // Use midpoint as pivot for touch zoom
                 const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
                 const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
                 
-                // Track cursor position
-                cursorPosition.x = centerX;
-                cursorPosition.y = centerY;
+                pivotPosition.x = centerX;
+                pivotPosition.y = centerY;
                 
                 setZoom(newZoom, centerX, centerY);
             }
@@ -1768,24 +1798,23 @@
             if (e.ctrlKey || e.metaKey) {
                 e.preventDefault();
                 const delta = e.deltaY > 0 ? 0.9 : 1.1;
-                // Track cursor position for zoom pivot
-                cursorPosition.x = e.clientX;
-                cursorPosition.y = e.clientY;
+                pivotPosition.x = e.clientX;
+                pivotPosition.y = e.clientY;
                 setZoom(zoomLevel * delta, e.clientX, e.clientY);
             }
         }, { passive: false });
         
-        // Track mouse movement for cursor position
+        // Track mouse movement for cursor position (desktop zoom pivot)
         canvasContainer.addEventListener('mousemove', function(e) {
-            cursorPosition.x = e.clientX;
-            cursorPosition.y = e.clientY;
+            pivotPosition.x = e.clientX;
+            pivotPosition.y = e.clientY;
         });
         
-        // Track touch movement for cursor position
+        // Track single touch for pivot tracking
         canvasContainer.addEventListener('touchmove', function(e) {
-            if (e.touches[0]) {
-                cursorPosition.x = e.touches[0].clientX;
-                cursorPosition.y = e.touches[0].clientY;
+            if (e.touches[0] && !touchState.isPinching) {
+                pivotPosition.x = e.touches[0].clientX;
+                pivotPosition.y = e.touches[0].clientY;
             }
         }, { passive: true });
     }
@@ -1827,12 +1856,10 @@
             const dx = clientX - startPos.x;
             const dy = clientY - startPos.y;
             
-            // Detect if moved significantly (vs tap)
             if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
                 hasMoved = true;
             }
             
-            // Calculate new position with bounds
             const maxX = window.innerWidth - 54;
             const maxY = window.innerHeight - 54;
             let newLeft = startOffset.left + dx;
@@ -1847,7 +1874,6 @@
         
         function endDrag() {
             if (isDragging) {
-                // Toggle UI only on tap (not drag)
                 if (!hasMoved) {
                     isUIVisible = !isUIVisible;
                     
@@ -1865,13 +1891,9 @@
             }
         }
         
-        // Mouse events
         masterSwitch.addEventListener('mousedown', startDrag);
-        
-        // Touch events
         masterSwitch.addEventListener('touchstart', startDrag, { passive: false });
         
-        // Global listeners
         document.addEventListener('mousemove', onDrag);
         document.addEventListener('mouseup', endDrag);
         document.addEventListener('touchmove', onDrag, { passive: false });
@@ -1916,23 +1938,22 @@
             // Sync color pickers with selected object
             if (['i-text', 'text', 'textbox'].includes(obj.type)) {
                 if (obj.fill && typeof obj.fill === 'string') {
-                    document.getElementById('textColor').value = obj.fill;
-                    document.getElementById('sidebarTextColor').value = obj.fill;
+                    syncColorInputs('textColor', 'sidebarTextColor', obj.fill);
                 }
                 if (obj.fontSize) {
-                    document.getElementById('fontSize').value = obj.fontSize;
-                    document.getElementById('sidebarFontSize').value = obj.fontSize;
+                    const sizeInput = document.getElementById('fontSize');
+                    const sidebarSize = document.getElementById('sidebarFontSize');
+                    if (sizeInput) sizeInput.value = obj.fontSize;
+                    if (sidebarSize) sidebarSize.value = obj.fontSize;
                 }
             }
             
-            if (!['i-text', 'text', 'textbox', 'image'].includes(obj.type)) {
+            if (!['i-text', 'text', 'textbox', 'image', 'group'].includes(obj.type)) {
                 if (obj.fill && typeof obj.fill === 'string') {
-                    document.getElementById('shapeFill').value = obj.fill;
-                    document.getElementById('sidebarShapeFill').value = obj.fill;
+                    syncColorInputs('shapeFill', 'sidebarShapeFill', obj.fill);
                 }
                 if (obj.stroke && typeof obj.stroke === 'string') {
-                    document.getElementById('shapeStroke').value = obj.stroke;
-                    document.getElementById('sidebarShapeStroke').value = obj.stroke;
+                    syncColorInputs('shapeStroke', 'sidebarShapeStroke', obj.stroke);
                 }
             }
         } else {
@@ -1952,7 +1973,6 @@
     // KEYBOARD SHORTCUTS
     // =========================
     document.addEventListener('keydown', function(e) {
-        // Prevent delete/backspace when editing text
         if (document.activeElement.tagName === 'INPUT' || 
             document.activeElement.tagName === 'TEXTAREA' ||
             canvas.getActiveObject()?.isEditing) {
@@ -1963,7 +1983,6 @@
             deleteSelected();
         }
         
-        // Zoom shortcuts - cursor-centered
         if (e.ctrlKey || e.metaKey) {
             if (e.key === '+' || e.key === '=') {
                 e.preventDefault();
@@ -1979,25 +1998,21 @@
     });
 
     // =========================
-    // WINDOW RESIZE HANDLING - PRESERVE POSITION
+    // WINDOW RESIZE HANDLING
     // =========================
     function handleResize() {
-        // Check if canvas is mostly off-screen before re-centering
         const wrapperRect = canvasWrapper.getBoundingClientRect();
         const containerRect = canvasContainer.getBoundingClientRect();
         
-        // Only re-center if canvas is completely out of view
         const isOffscreen = wrapperRect.right < -100 || wrapperRect.left > containerRect.width + 100 ||
                            wrapperRect.bottom < -100 || wrapperRect.top > containerRect.height + 100;
         
         if (isOffscreen) {
             centerCanvasInViewport();
         }
-        // Otherwise preserve user's pan position
         
         updateCanvasInfo();
         
-        // Adjust master switch position for mobile
         if (window.innerWidth <= 767) {
             masterSwitch.style.right = '16px';
             masterSwitch.style.bottom = 'calc(42px + env(safe-area-inset-bottom))';
@@ -2008,15 +2023,12 @@
     // INITIALIZATION
     // =========================
     window.addEventListener('load', function() {
-        // Initialize canvas positioning
         initCanvas();
         
-        // Setup interactions
         setupCanvasHandle();
         setupTouchGestures();
         setupMasterSwitch();
         
-        // Position master switch initially
         if (isMobile) {
             masterSwitch.style.right = '16px';
             masterSwitch.style.bottom = 'calc(42px + env(safe-area-inset-bottom))';
@@ -2025,7 +2037,7 @@
             masterSwitch.style.bottom = 'calc(48px + env(safe-area-inset-bottom))';
         }
         
-        // Event listeners for dragging - KEY FIX: panning always works on workspace
+        // Event listeners for dragging
         canvasContainer.addEventListener('mousedown', startDrag);
         canvasContainer.addEventListener('touchstart', startDrag, { passive: false });
         document.addEventListener('mousemove', onDrag);
@@ -2034,24 +2046,21 @@
         document.addEventListener('touchend', endDrag);
         document.addEventListener('touchcancel', endDrag);
         
-        // Event listeners
         window.addEventListener('resize', handleResize);
         window.addEventListener('orientationchange', function() {
             setTimeout(handleResize, 300);
         });
         
-        // Close dropdowns on scroll
         topbarScroll?.addEventListener('scroll', function() {
             document.querySelectorAll('.dropdown-menu').forEach(menu => {
                 menu.classList.remove('active');
             });
         });
         
-        // Initial info update
         updateCanvasInfo();
         updateObjectInfo();
         
-        console.log('✅ Design Studio initialized - Cursor-centered zoom & workspace-centered object placement FIXED');
+        console.log('✅ Design Studio initialized - Color sync & pivot zoom FIXED');
     });
 
     // Prevent pull-to-refresh when interacting with canvas
