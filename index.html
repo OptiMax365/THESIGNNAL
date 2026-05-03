@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -54,13 +53,10 @@
             flex-direction: column;
             gap: 6px;
             transition: transform 0.3s ease, opacity 0.3s ease;
-            /* ✅ KEY FIX: Allow horizontal pan on entire topbar */
-            touch-action: pan-x !important;
-            -webkit-overflow-scrolling: touch;
         }
         .topbar.hidden { transform: translateY(-100%); opacity: 0; pointer-events: none; }
 
-        /* ✅ FIXED: Topbar horizontal scroll with full swipe support everywhere */
+        /* ✅ FIXED: Topbar horizontal scroll with FULL swipe support */
         .topbar-scroll {
             display: flex;
             overflow-x: auto;
@@ -73,12 +69,11 @@
             gap: 8px;
             width: 100%;
             min-height: 44px;
-            /* ✅ CRITICAL: Enable horizontal panning, block vertical */
+            /* Critical: Allow horizontal pan, block vertical pan to enable swipe */
             touch-action: pan-x !important;
             scroll-behavior: smooth;
-            /* ✅ Allow swipe even when touching child elements */
-            -webkit-user-select: none;
-            user-select: none;
+            /* Ensure swipe works across entire area */
+            -webkit-overflow-scrolling: touch;
         }
         .topbar-scroll::-webkit-scrollbar { display: none; height: 0; width: 0; }
 
@@ -92,35 +87,170 @@
             scroll-snap-align: start;
             flex-shrink: 0;
             border: 1px solid rgba(255,255,255,0.15);
-            /* ✅ Allow buttons to be clickable but not block parent scroll */
-            touch-action: manipulation;
+            /* Allow swipe to pass through to container */
+            pointer-events: auto;
+            touch-action: pan-x;
         }
 
         .tool-group-title { font-size: 10px; color: rgba(255,255,255,0.9); font-weight: 600; margin-right: 4px; white-space: nowrap; }
-        .topbar-btn { padding: 8px 12px; border-radius: 10px; border: none; background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; font-size: 12px; font-weight: 600; cursor: pointer; min-height: 36px; min-width: 36px; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 4px; transition: all 0.15s ease; touch-action: manipulation; }
+        
+        /* ✅ FIXED: Buttons allow swipe to propagate - critical for full-area swipe */
+        .topbar-btn { 
+            padding: 8px 12px; 
+            border-radius: 10px; 
+            border: none; 
+            background: linear-gradient(135deg, #27ae60, #2ecc71); 
+            color: white; 
+            font-size: 12px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            min-height: 36px; 
+            min-width: 36px; 
+            white-space: nowrap; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 4px; 
+            transition: all 0.15s ease; 
+            /* Allow horizontal swipe to pass through to parent */
+            touch-action: pan-x !important;
+            pointer-events: auto;
+            -webkit-tap-highlight-color: rgba(255,255,255,0.2);
+            user-select: none;
+            -webkit-user-select: none;
+        }
         .topbar-btn:active { transform: scale(0.96); background: linear-gradient(135deg, #219653, #27ae60); }
 
-        .color-btn { width: 36px !important; height: 36px !important; border-radius: 10px !important; border: 2px solid rgba(255,255,255,0.4) !important; padding: 0 !important; background: linear-gradient(135deg, #667eea, #764ba2) !important; position: relative !important; overflow: hidden !important; flex-shrink: 0 !important; cursor: pointer !important; touch-action: manipulation; }
-        .color-btn input[type="color"] { position: absolute; width: 200%; height: 200%; opacity: 0; cursor: pointer; top: -50%; left: -50%; margin: 0; }
-        .color-btn::after { content: "✦"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 14px; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.4); pointer-events: none; }
+        .color-btn { 
+            width: 36px !important; 
+            height: 36px !important; 
+            border-radius: 10px !important; 
+            border: 2px solid rgba(255,255,255,0.4) !important; 
+            padding: 0 !important; 
+            background: linear-gradient(135deg, #667eea, #764ba2) !important; 
+            position: relative !important; 
+            overflow: hidden !important; 
+            flex-shrink: 0 !important; 
+            cursor: pointer !important;
+            touch-action: pan-x !important;
+            user-select: none;
+        }
+        .color-btn input[type="color"] { 
+            position: absolute; 
+            width: 200%; 
+            height: 200%; 
+            opacity: 0; 
+            cursor: pointer; 
+            top: -50%; 
+            left: -50%; 
+            margin: 0; 
+            touch-action: pan-x !important;
+        }
+        .color-btn::after { 
+            content: "✦"; 
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            color: white; 
+            font-size: 14px; 
+            font-weight: bold; 
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4); 
+            pointer-events: none; 
+        }
 
-        .dropdown-wrapper { position: relative; min-width: 90px; touch-action: manipulation; }
-        .dropdown-trigger { background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; padding: 8px 24px 8px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; cursor: pointer; min-height: 36px; display: flex; align-items: center; justify-content: space-between; white-space: nowrap; position: relative; touch-action: manipulation; }
+        .dropdown-wrapper { position: relative; min-width: 90px; touch-action: pan-x; }
+        .dropdown-trigger { 
+            background: linear-gradient(135deg, #27ae60, #2ecc71); 
+            color: white; 
+            padding: 8px 24px 8px 10px; 
+            border-radius: 10px; 
+            font-size: 11px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            min-height: 36px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            white-space: nowrap; 
+            position: relative;
+            touch-action: pan-x !important;
+            user-select: none;
+        }
         .dropdown-trigger::after { content: "▼"; position: absolute; right: 8px; font-size: 9px; }
-        .dropdown-menu { position: absolute; top: 100%; left: 0; background: #025f3b; border-radius: 10px; margin-top: 6px; z-index: 99999; max-height: 180px; overflow-y: auto; -webkit-overflow-scrolling: touch; display: none; box-shadow: 0 6px 20px rgba(0,0,0,0.35); min-width: 130px; border: 1px solid rgba(255,255,255,0.2); touch-action: auto; }
+        .dropdown-menu { 
+            position: absolute; 
+            top: 100%; 
+            left: 0; 
+            background: #025f3b; 
+            border-radius: 10px; 
+            margin-top: 6px; 
+            z-index: 99999; 
+            max-height: 180px; 
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch; 
+            display: none; 
+            box-shadow: 0 6px 20px rgba(0,0,0,0.35); 
+            min-width: 130px; 
+            border: 1px solid rgba(255,255,255,0.2);
+            touch-action: pan-y; /* Dropdown needs vertical scroll */
+        }
         .dropdown-menu.active { display: block; }
         .dropdown-menu div { padding: 9px 14px; cursor: pointer; color: white; font-size: 12px; white-space: nowrap; transition: background 0.15s; }
         .dropdown-menu div:active, .dropdown-menu div:hover { background: rgba(255,255,255,0.15); color: #fff; }
 
-        .size-input-group { display: flex; align-items: center; gap: 4px; padding: 4px 6px; background: rgba(255,255,255,0.12); border-radius: 10px; flex-shrink: 0; touch-action: manipulation; }
+        .size-input-group { 
+            display: flex; 
+            align-items: center; 
+            gap: 4px; 
+            padding: 4px 6px; 
+            background: rgba(255,255,255,0.12); 
+            border-radius: 10px; 
+            flex-shrink: 0;
+            touch-action: pan-x;
+        }
         .size-input-group label { font-size: 10px; color: rgba(255,255,255,0.95); font-weight: 600; }
-        .size-input-group input { width: 46px; padding: 5px 4px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); font-size: 11px; height: 28px; text-align: center; background: rgba(255,255,255,0.15); color: white; font-weight: 500; touch-action: auto; }
+        .size-input-group input { 
+            width: 46px; 
+            padding: 5px 4px; 
+            border-radius: 6px; 
+            border: 1px solid rgba(255,255,255,0.3); 
+            font-size: 11px; 
+            height: 28px; 
+            text-align: center; 
+            background: rgba(255,255,255,0.15); 
+            color: white; 
+            font-weight: 500;
+            touch-action: pan-x;
+        }
         .size-input-group input:focus { outline: none; border-color: #00ff6a; background: rgba(255,255,255,0.25); }
 
-        .zoom-group { display: flex; align-items: center; gap: 4px; padding: 4px 6px; background: rgba(255,255,255,0.12); border-radius: 10px; flex-shrink: 0; touch-action: manipulation; }
+        .zoom-group { 
+            display: flex; 
+            align-items: center; 
+            gap: 4px; 
+            padding: 4px 6px; 
+            background: rgba(255,255,255,0.12); 
+            border-radius: 10px; 
+            flex-shrink: 0;
+            touch-action: pan-x;
+        }
         .zoom-display { font-size: 11px; color: rgba(255,255,255,0.95); min-width: 42px; text-align: center; font-weight: 600; }
 
-        .scroll-hint { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 50px; height: 3px; background: rgba(255,255,255,0.6); border-radius: 2px; animation: pulse 2s infinite; pointer-events: none; display: none; }
+        .scroll-hint { 
+            position: absolute; 
+            bottom: 4px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            width: 50px; 
+            height: 3px; 
+            background: rgba(255,255,255,0.8); 
+            border-radius: 2px; 
+            animation: pulse 2s infinite; 
+            pointer-events: none; 
+            display: block; /* Always show on mobile */
+            z-index: 1001;
+        }
         @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
 
         .workspace { display: flex; flex: 1; overflow: hidden; position: relative; margin-top: calc(60px + env(safe-area-inset-top)); width: 100%; background: #f0f2f5; }
@@ -194,7 +324,7 @@
             .color-btn { width: 34px !important; height: 34px !important; }
             .size-input-group input { width: 42px; font-size: 10px; height: 26px; }
             .zoom-display { font-size: 10px; min-width: 38px; }
-            .scroll-hint { display: block; }
+            .scroll-hint { display: block !important; }
             #masterSwitch { right: 16px; bottom: calc(42px + env(safe-area-inset-bottom)); width: 50px; height: 50px; }
         }
 
@@ -231,7 +361,7 @@
     </style>
 </head>
 <body>
-    <!-- TOPBAR - WITH FULL SWIPE SUPPORT -->
+    <!-- TOPBAR -->
     <div class="topbar" id="topbar">
         <div class="topbar-scroll" id="topbarScroll">
             <div class="tool-group">
@@ -441,89 +571,75 @@
     let panOffset = { x: 0, y: 0 };
 
     // =========================
-    // ✅ TOPBAR SWIPE FIX: Enable horizontal swipe anywhere in topbar
+    // ✅ FIXED: TOPBAR SWIPE HANDLER - FULL AREA, SMOOTH SCROLL
     // =========================
     function setupTopbarSwipe() {
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let scrollLeft = 0;
-        let isDown = false;
-        let isScrolling = false;
+        let swipeState = {
+            active: false,
+            startX: 0,
+            startY: 0,
+            startScroll: 0,
+            lastX: 0
+        };
 
-        // Prevent default on touchstart for horizontal swipes only
-        topbarScroll.addEventListener('touchstart', function(e) {
-            if (e.touches.length !== 1) return;
+        function onStart(e) {
+            // Only handle if this is a horizontal swipe attempt
+            const touch = e.touches ? e.touches[0] : e;
+            swipeState.startX = touch.clientX;
+            swipeState.startY = touch.clientY;
+            swipeState.startScroll = topbarScroll.scrollLeft;
+            swipeState.lastX = touch.clientX;
+            swipeState.active = true;
             
-            touchStartX = e.touches[0].pageX - topbarScroll.offsetLeft;
-            touchStartY = e.touches[0].pageY;
-            scrollLeft = topbarScroll.scrollLeft;
-            isDown = true;
-            isScrolling = false;
-            
-            // Add dragging class for visual feedback
-            topbarScroll.classList.add('dragging');
-        }, { passive: true });
+            // Add visual feedback
+            topbarScroll.style.scrollBehavior = 'auto';
+        }
 
-        topbarScroll.addEventListener('touchmove', function(e) {
-            if (!isDown || e.touches.length !== 1) return;
+        function onMove(e) {
+            if (!swipeState.active) return;
             
-            const x = e.touches[0].pageX - topbarScroll.offsetLeft;
-            const y = e.touches[0].pageY;
-            const walkX = (x - touchStartX) * 1.5; // Faster scroll multiplier
-            const walkY = y - touchStartY;
+            const touch = e.touches ? e.touches[0] : e;
+            const dx = touch.clientX - swipeState.lastX;
+            const dy = touch.clientY - swipeState.startY;
             
-            // Only enable horizontal scroll if horizontal movement > vertical
-            if (Math.abs(walkX) > Math.abs(walkY)) {
-                e.preventDefault(); // Block page scroll, allow horizontal
-                isScrolling = true;
-                topbarScroll.scrollLeft = scrollLeft - walkX;
+            // Only scroll horizontally if horizontal movement dominates
+            if (Math.abs(dx) > Math.abs(dy) * 1.5) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Manual scroll for smooth, responsive swipe
+                topbarScroll.scrollLeft = swipeState.startScroll - dx;
+                swipeState.lastX = touch.clientX;
+            }
+        }
+
+        function onEnd() {
+            if (swipeState.active) {
+                swipeState.active = false;
+                // Restore smooth scrolling after swipe
+                setTimeout(() => {
+                    topbarScroll.style.scrollBehavior = 'smooth';
+                }, 100);
+            }
+        }
+
+        // Touch events (mobile)
+        topbarScroll.addEventListener('touchstart', onStart, { passive: false });
+        topbarScroll.addEventListener('touchmove', onMove, { passive: false });
+        topbarScroll.addEventListener('touchend', onEnd);
+        topbarScroll.addEventListener('touchcancel', onEnd);
+        
+        // Mouse events (desktop testing)
+        topbarScroll.addEventListener('mousedown', onStart);
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onEnd);
+        
+        // Prevent default browser swipe-back on iOS
+        topbarScroll.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                e.preventDefault();
             }
         }, { passive: false });
-
-        function endSwipe() {
-            isDown = false;
-            isScrolling = false;
-            topbarScroll.classList.remove('dragging');
-        }
-
-        topbarScroll.addEventListener('touchend', endSwipe);
-        topbarScroll.addEventListener('touchcancel', endSwipe);
-
-        // Also support mouse drag for desktop testing
-        topbarScroll.addEventListener('mousedown', function(e) {
-            if (e.button !== 0) return; // Only left mouse button
-            touchStartX = e.pageX - topbarScroll.offsetLeft;
-            touchStartY = e.pageY;
-            scrollLeft = topbarScroll.scrollLeft;
-            isDown = true;
-            isScrolling = false;
-            topbarScroll.classList.add('dragging');
-            topbarScroll.style.cursor = 'grabbing';
-        });
-
-        topbarScroll.addEventListener('mousemove', function(e) {
-            if (!isDown) return;
-            e.preventDefault();
-            const x = e.pageX - topbarScroll.offsetLeft;
-            const y = e.pageY;
-            const walkX = (x - touchStartX) * 1.5;
-            const walkY = y - touchStartY;
-            
-            if (Math.abs(walkX) > Math.abs(walkY)) {
-                isScrolling = true;
-                topbarScroll.scrollLeft = scrollLeft - walkX;
-            }
-        });
-
-        function endMouseSwipe() {
-            isDown = false;
-            isScrolling = false;
-            topbarScroll.classList.remove('dragging');
-            topbarScroll.style.cursor = '';
-        }
-
-        document.addEventListener('mouseup', endMouseSwipe);
-        document.addEventListener('mouseleave', endMouseSwipe);
     }
 
     // =========================
@@ -568,7 +684,7 @@
     }
 
     // =========================
-    // 🔧 ZOOM: Simple center-based zoom (FIXED)
+    // 🔧 ZOOM: Simple center-based zoom (from working script)
     // =========================
     function setZoom(newZoom) {
         zoomLevel = Math.max(0.1, Math.min(5, newZoom));
@@ -803,7 +919,7 @@
     }
 
     // =========================
-    // PANNING LOGIC
+    // ✅ PANNING: Works anywhere on canvas background
     // =========================
     let panState = { active: false, lastX: 0, lastY: 0, startPanX: 0, startPanY: 0 };
 
@@ -816,7 +932,6 @@
         const cx = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
         const cy = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
         
-        const pointer = canvas.getPointer(e);
         const target = canvas.findTarget(e);
         
         if (dragMode || !target || !target.selectable) {
@@ -857,7 +972,7 @@
         }
     }
 
-    // Canvas handle drag
+    // Canvas handle drag (alternative pan method)
     function setupCanvasHandle() {
         let hds = { active: false, lastX: 0, lastY: 0, startPanX: 0, startPanY: 0 };
 
@@ -909,7 +1024,7 @@
     }
 
     // =========================
-    // ZOOM & TOUCH GESTURES
+    // 🔧 ZOOM & TOUCH GESTURES (Simplified)
     // =========================
     function setupZoomGestures() {
         let pinchState = { active: false, startDist: 0, startZoom: 1 };
@@ -1029,9 +1144,7 @@
         setupCanvasHandle();
         setupZoomGestures();
         setupMasterSwitch();
-        
-        // ✅ ENABLE TOPBAR SWIPE - MUST BE CALLED
-        setupTopbarSwipe();
+        setupTopbarSwipe(); // ✅ Initialize topbar swipe handler
         
         // Add pan listeners to canvas container for background panning
         canvasContainer.addEventListener('mousedown', startPan);
@@ -1050,13 +1163,16 @@
         topbarScroll?.addEventListener('scroll', () => document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('active')));
         
         updateCanvasInfo(); updateObjectInfo();
-        console.log('✅ Design Studio: Full topbar swipe + center-zoom + panning active');
+        console.log('✅ Design Studio: FULL topbar swipe + zoom + pan active');
     });
 
-    // Prevent pull-to-refresh on canvas ONLY (allow topbar scroll)
+    // ✅ FIXED: Prevent pull-to-refresh ONLY on canvas, allow topbar swipe
     document.addEventListener('touchmove', e => { 
-        if (e.target.closest('.canvas-container') && !e.target.closest('.topbar-scroll')) {
-            e.preventDefault(); 
+        // Allow topbar swipe to work freely
+        if (e.target.closest('.topbar-scroll')) return;
+        // Only prevent default on canvas container
+        if (e.target.closest('.canvas-container')) {
+            e.preventDefault();
         }
     }, { passive: false });
 </script>
