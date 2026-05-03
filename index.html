@@ -56,6 +56,7 @@
         }
         .topbar.hidden { transform: translateY(-100%); opacity: 0; pointer-events: none; }
 
+        /* ✅ FIXED: Topbar horizontal scroll with proper swipe support */
         .topbar-scroll {
             display: flex;
             overflow-x: auto;
@@ -68,7 +69,8 @@
             gap: 8px;
             width: 100%;
             min-height: 44px;
-            touch-action: pan-x;
+            /* KEY FIX: Allow horizontal panning for swipe navigation */
+            touch-action: pan-x !important;
             scroll-behavior: smooth;
         }
         .topbar-scroll::-webkit-scrollbar { display: none; height: 0; width: 0; }
@@ -452,7 +454,6 @@
         canvasContainer.focus();
     }
 
-    // ✅ FIXED: Simple, reliable transform - same as working script
     function applyCanvasTransform() {
         canvasWrapper.style.transform = `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`;
         canvasWrapper.style.transformOrigin = 'center center';
@@ -472,7 +473,7 @@
     }
 
     // =========================
-    // 🔧 ZOOM: Simple center-based zoom (from working script)
+    // 🔧 ZOOM: Simple center-based zoom (FIXED)
     // =========================
     function setZoom(newZoom) {
         zoomLevel = Math.max(0.1, Math.min(5, newZoom));
@@ -707,7 +708,7 @@
     }
 
     // =========================
-    // ✅ PANNING: Works anywhere on canvas background
+    // PANNING LOGIC
     // =========================
     let panState = { active: false, lastX: 0, lastY: 0, startPanX: 0, startPanY: 0 };
 
@@ -720,6 +721,7 @@
         const cx = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
         const cy = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
         
+        const pointer = canvas.getPointer(e);
         const target = canvas.findTarget(e);
         
         if (dragMode || !target || !target.selectable) {
@@ -760,7 +762,7 @@
         }
     }
 
-    // Canvas handle drag (alternative pan method)
+    // Canvas handle drag
     function setupCanvasHandle() {
         let hds = { active: false, lastX: 0, lastY: 0, startPanX: 0, startPanY: 0 };
 
@@ -812,7 +814,7 @@
     }
 
     // =========================
-    // 🔧 ZOOM & TOUCH GESTURES (Simplified)
+    // ZOOM & TOUCH GESTURES
     // =========================
     function setupZoomGestures() {
         let pinchState = { active: false, startDist: 0, startZoom: 1 };
@@ -950,11 +952,15 @@
         topbarScroll?.addEventListener('scroll', () => document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('active')));
         
         updateCanvasInfo(); updateObjectInfo();
-        console.log('✅ Design Studio: Simple center-zoom + full panning active');
+        console.log('✅ Design Studio: Swipe-enabled topbar + center-zoom + full panning active');
     });
 
-    // Prevent pull-to-refresh on canvas
-    document.addEventListener('touchmove', e => { if (e.target.closest('.canvas-container')) e.preventDefault(); }, { passive: false });
+    // Prevent pull-to-refresh on canvas ONLY (allow topbar scroll)
+    document.addEventListener('touchmove', e => { 
+        if (e.target.closest('.canvas-container') && !e.target.closest('.topbar-scroll')) {
+            e.preventDefault(); 
+        }
+    }, { passive: false });
 </script>
 </body>
 </html>
