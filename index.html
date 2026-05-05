@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#025f3b">
-    <title>Ultimate Design Studio - Mobile Optimized</title>
+    <title>THESIGNNAL - Master Platform</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <style>
         * {
@@ -40,6 +40,909 @@
             -webkit-overflow-scrolling: touch;
         }
 
+        /* =========================
+           MASTER MENU OVERLAY STYLES
+           ========================= */
+        #masterMenuOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #025f3b 0%, #037a4d 40%, #059e63 100%);
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            /* ✅ FIXED: Enable vertical scrolling on mobile */
+            touch-action: pan-y !important;
+            scroll-behavior: smooth;
+        }
+        
+        #masterMenuOverlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        
+        .master-header {
+            text-align: center;
+            margin-bottom: 30px;
+            max-width: 90%;
+            flex-shrink: 0;
+        }
+        
+        .master-logo {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        
+        .master-subtitle {
+            color: rgba(255,255,255,0.92);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            max-width: 500px;
+            line-height: 1.4;
+        }
+        
+        .auth-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .auth-btn {
+            padding: 12px 28px;
+            border-radius: 50px;
+            border: none;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 120px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+        }
+        
+        .signup-btn {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+        
+        .signin-btn {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .auth-btn:active {
+            transform: scale(0.97);
+        }
+        
+        .user-greeting {
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: none;
+            text-align: center;
+            background: rgba(255,255,255,0.15);
+            padding: 10px 25px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        
+        .user-greeting.visible {
+            display: block;
+        }
+        
+        .user-greeting:hover {
+            background: rgba(255,255,255,0.25);
+            transform: scale(1.02);
+        }
+        
+        .master-menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 16px;
+            width: 100%;
+            max-width: 1200px;
+            padding: 10px;
+            /* ✅ Allow grid to scroll on mobile */
+            flex-shrink: 0;
+        }
+        
+        .master-menu-item {
+            background: rgba(255,255,255,0.12);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 20px 16px;
+            text-align: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            min-height: 110px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+            backdrop-filter: blur(5px);
+            position: relative;
+            overflow: hidden;
+            /* ✅ Enable touch interactions */
+            touch-action: manipulation;
+        }
+        
+        .master-menu-item:hover {
+            transform: translateY(-3px);
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.4);
+        }
+        
+        .master-menu-item:active {
+            transform: scale(0.98);
+        }
+        
+        .master-menu-item.design-item {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            border-color: rgba(255,255,255,0.5);
+            box-shadow: 0 8px 25px rgba(0,214,122,0.4);
+        }
+        
+        .master-menu-item.coming-soon {
+            opacity: 0.9;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* ✅ REMOVED: Red COMING SOON ribbon */
+        /* .master-menu-item.coming-soon::after { ... } */
+        
+        /* ✅ BLINKING WIFI INDICATOR FOR COMING SOON */
+        .wifi-indicator {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            width: 14px;
+            height: 14px;
+            background: #00ff6a;
+            border-radius: 50%;
+            box-shadow: 0 0 0 0 rgba(0, 255, 106, 0.7);
+            animation: wifi-blink 1.5s infinite;
+            z-index: 2;
+        }
+        
+        @keyframes wifi-blink {
+            0% { box-shadow: 0 0 0 0 rgba(0, 255, 106, 0.7); }
+            50% { box-shadow: 0 0 0 8px rgba(0, 255, 106, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 255, 106, 0); }
+        }
+        
+        .menu-icon {
+            font-size: 1.8rem;
+            margin-bottom: 4px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .master-footer {
+            margin-top: 25px;
+            color: rgba(255,255,255,0.85);
+            font-size: 0.9rem;
+            text-align: center;
+            max-width: 600px;
+            line-height: 1.5;
+            padding: 0 15px;
+            flex-shrink: 0;
+            padding-bottom: calc(20px + env(safe-area-inset-bottom));
+        }
+        
+        .launch-date {
+            background: rgba(0,0,0,0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-top: 6px;
+            display: inline-block;
+        }
+        
+        /* =========================
+           MODAL STYLES
+           ========================= */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            padding: 20px;
+        }
+        
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+            padding: 25px;
+            /* ✅ Enable scrolling inside modals on mobile */
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
+        }
+        
+        .modal.active .modal-content {
+            transform: translateY(0);
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #475569;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+        
+        .modal-close:hover {
+            background: #e2e8f0;
+            transform: rotate(90deg);
+        }
+        
+        .modal-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 20px;
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .form-group {
+            margin-bottom: 18px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #334155;
+            font-size: 0.95rem;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #cbd5e1;
+            border-radius: 14px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+            resize: vertical;
+            min-height: 44px;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            font-family: inherit;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #025f3b;
+            box-shadow: 0 0 0 3px rgba(2, 95, 59, 0.15);
+        }
+        
+        .modal-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #025f3b, #037a4d);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(2, 95, 59, 0.3);
+        }
+        
+        .modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(2, 95, 59, 0.4);
+        }
+        
+        .modal-btn:active {
+            transform: translateY(0);
+        }
+        
+        .modal-footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+        
+        .modal-footer a {
+            color: #025f3b;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .modal-footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .profile-section {
+            text-align: center;
+            padding: 10px 0;
+        }
+        
+        .profile-avatar-container {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 15px;
+        }
+        
+        .profile-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #025f3b, #037a4d);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            font-weight: 700;
+            border: 4px solid white;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            overflow: hidden;
+        }
+        
+        .profile-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+        }
+        
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .avatar-upload {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #025f3b;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: all 0.2s;
+        }
+        
+        .avatar-upload:hover {
+            background: #037a4d;
+            transform: scale(1.1);
+        }
+        
+        .profile-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+        
+        .profile-email {
+            color: #64748b;
+            margin-bottom: 20px;
+        }
+        
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+        
+        .stat-item {
+            background: #f8fafc;
+            padding: 12px 8px;
+            border-radius: 14px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: #025f3b;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+        
+        .profile-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .profile-btn {
+            padding: 12px;
+            border-radius: 14px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        
+        .profile-edit {
+            background: #f1f5f9;
+            color: #334155;
+        }
+        
+        .profile-save {
+            background: linear-gradient(135deg, #025f3b, #037a4d);
+            color: white;
+        }
+        
+        .profile-logout {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+        
+        .profile-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .profile-form {
+            display: none;
+            text-align: left;
+            margin-top: 15px;
+        }
+        
+        .profile-form.active {
+            display: block;
+        }
+        
+        .profile-view {
+            display: block;
+        }
+        
+        .profile-view.hidden {
+            display: none;
+        }
+        
+        /* =========================
+           COMING SOON MODAL
+           ========================= */
+        .coming-soon-content {
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .feature-icon {
+            font-size: 3.5rem;
+            margin: 10px 0 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 800;
+        }
+        
+        .feature-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 10px 0;
+        }
+        
+        .feature-desc {
+            color: #475569;
+            line-height: 1.5;
+            margin: 15px 0 25px;
+            font-size: 1.05rem;
+        }
+        
+        .countdown-container {
+            background: linear-gradient(135deg, #025f3b, #037a4d);
+            border-radius: 20px;
+            padding: 20px;
+            margin: 20px 0;
+            color: white;
+        }
+        
+        .countdown-title {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+            opacity: 0.95;
+        }
+        
+        .countdown-timer {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            font-weight: 700;
+        }
+        
+        .countdown-item {
+            background: rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 12px 6px;
+            min-width: 60px;
+        }
+        
+        .countdown-value {
+            font-size: 1.8rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        .countdown-label {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .launch-date-display {
+            background: rgba(255,255,255,0.2);
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 50px;
+            margin-top: 15px;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .notify-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            margin-top: 10px;
+        }
+        
+        /* =========================
+           DESIGN APP BACK BUTTON
+           ========================= */
+        #backToMasterBtn {
+            position: fixed;
+            top: calc(16px + env(safe-area-inset-top));
+            left: 16px;
+            z-index: 10000;
+            background: linear-gradient(135deg, #025f3b, #037a4d);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 10px 20px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+            min-height: 40px;
+        }
+        
+        #backToMasterBtn.visible {
+            display: flex;
+        }
+        
+        #backToMasterBtn:active {
+            transform: scale(0.97);
+        }
+        
+        /* =========================
+           BROWSER APP STYLES
+           ========================= */
+        #browserApp {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #f8fafc;
+            z-index: 999998;
+            display: none;
+            flex-direction: column;
+            transition: opacity 0.3s ease;
+        }
+        
+        #browserApp.active {
+            display: flex;
+        }
+        
+        .browser-header {
+            background: linear-gradient(135deg, #025f3b, #037a4d);
+            color: white;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            position: relative;
+            z-index: 100;
+            flex-shrink: 0;
+        }
+        
+        .browser-tabs {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            flex: 1;
+            padding: 4px 0;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            touch-action: pan-x;
+        }
+        
+        .browser-tabs::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .browser-tab {
+            background: rgba(255,255,255,0.15);
+            border-radius: 8px 8px 0 0;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 120px;
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .browser-tab.active {
+            background: white;
+            color: #025f3b;
+            font-weight: 600;
+        }
+        
+        .browser-tab .close-tab {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.2);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .browser-tab.active .close-tab {
+            background: #e2e8f0;
+            color: #475569;
+        }
+        
+        .browser-tab .close-tab:hover {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .browser-tab.new-tab {
+            background: rgba(255,255,255,0.2);
+            min-width: 36px;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .browser-tab.new-tab:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .browser-url-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: white;
+            border-radius: 12px;
+            margin: 0 8px;
+            flex: 1;
+            max-width: 600px;
+        }
+        
+        .browser-url-bar input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 0.95rem;
+            color: #334155;
+            background: transparent;
+            padding: 4px 8px;
+        }
+        
+        .browser-url-bar input::placeholder {
+            color: #94a3b8;
+        }
+        
+        .browser-nav-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+        
+        .browser-nav-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .browser-nav-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .browser-content {
+            flex: 1;
+            background: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .browser-iframe-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        .browser-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        .browser-iframe.hidden {
+            display: none;
+        }
+        
+        .browser-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #64748b;
+            padding: 20px;
+            max-width: 400px;
+        }
+        
+        .browser-placeholder-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.7;
+        }
+        
+        .browser-placeholder h3 {
+            color: #334155;
+            margin-bottom: 8px;
+            font-size: 1.2rem;
+        }
+        
+        .browser-back-btn {
+            position: fixed;
+            top: calc(16px + env(safe-area-inset-top));
+            right: 16px;
+            z-index: 10000;
+            background: linear-gradient(135deg, #025f3b, #037a4d);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 10px 20px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+            min-height: 40px;
+        }
+        
+        .browser-back-btn.visible {
+            display: flex;
+        }
+        
+        .browser-back-btn:active {
+            transform: scale(0.97);
+        }
+        
+        /* =========================
+           EXISTING DESIGN APP STYLES (UNCHANGED FUNCTIONALITY)
+           ========================= */
         .topbar {
             position: fixed;
             top: env(safe-area-inset-top);
@@ -56,7 +959,6 @@
         }
         .topbar.hidden { transform: translateY(-100%); opacity: 0; pointer-events: none; }
 
-        /* ✅ FIXED: Ultra-responsive horizontal swipe for topbar */
         .topbar-scroll {
             display: flex;
             overflow-x: auto;
@@ -69,10 +971,8 @@
             gap: 8px;
             width: 100%;
             min-height: 44px;
-            /* ✅ KEY: Allow horizontal pan, block vertical to enable fast swipe */
             touch-action: pan-x !important;
             scroll-behavior: smooth;
-            /* ✅ Ensure content doesn't shrink */
             flex-wrap: nowrap;
             will-change: scroll-position;
         }
@@ -86,10 +986,8 @@
             background: rgba(255,255,255,0.12);
             border-radius: 12px;
             scroll-snap-align: start;
-            /* ✅ CRITICAL: Prevent shrinking so all buttons show */
             flex-shrink: 0;
             border: 1px solid rgba(255,255,255,0.15);
-            /* ✅ Allow buttons to work but don't block parent scroll */
             touch-action: manipulation;
         }
 
@@ -193,6 +1091,16 @@
             .zoom-display { font-size: 10px; min-width: 38px; }
             .scroll-hint { display: block; }
             #masterSwitch { right: 16px; bottom: calc(42px + env(safe-area-inset-bottom)); width: 50px; height: 50px; }
+            .master-menu-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+            .master-menu-item { min-height: 100px; padding: 16px 12px; font-size: 0.95rem; }
+            .menu-icon { font-size: 1.5rem; }
+            .browser-tabs { gap: 2px; }
+            .browser-tab { min-width: 100px; padding: 6px 12px; font-size: 0.8rem; }
+            .browser-url-bar { margin: 0 4px; }
+            /* ✅ FIXED: Ensure master menu scrolls on mobile */
+            #masterMenuOverlay {
+                padding-bottom: calc(80px + env(safe-area-inset-bottom));
+            }
         }
 
         @media (min-width: 768px) {
@@ -225,9 +1133,400 @@
         .fabric-object--selected { stroke-width: 3px !important; stroke: #00d67a !important; strokeDashArray: none !important; }
         .canvas-wrapper.fabric-editing { pointer-events: none; }
         .canvas-wrapper.fabric-editing canvas { pointer-events: auto; }
+        
+        /* Mobile adjustments for modals */
+        @media (max-width: 480px) {
+            .modal-content {
+                padding: 20px 18px;
+                border-radius: 20px;
+            }
+            .modal-title {
+                font-size: 1.4rem;
+            }
+            .countdown-timer {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 4px;
+            }
+            .countdown-value {
+                font-size: 1.4rem;
+            }
+            .countdown-label {
+                font-size: 0.65rem;
+            }
+            .master-menu-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+            .browser-header {
+                flex-wrap: wrap;
+            }
+            .browser-url-bar {
+                order: 3;
+                margin: 8px 8px 0;
+                max-width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- =========================
+         MASTER MENU OVERLAY
+         ========================= -->
+    <div id="masterMenuOverlay">
+        <div class="master-header">
+            <div class="master-logo">THESIGNNAL</div>
+            <div class="master-subtitle">Your all-in-one creative platform for design, social, AI tools, and more. Sign in to unlock your personalized experience.</div>
+        </div>
+        
+        <div class="auth-buttons">
+            <button class="auth-btn signup-btn" onclick="openModal('signupModal')">Sign Up</button>
+            <button class="auth-btn signin-btn" onclick="openModal('signinModal')">Sign In</button>
+        </div>
+        
+        <div class="user-greeting" id="userGreeting" onclick="openProfile()">
+            Welcome back, <span id="greetingName">User</span>! ✨ <span style="margin-left:8px;font-size:0.9em">👤 View Profile</span>
+        </div>
+        
+        <div class="master-menu-grid">
+            <div class="master-menu-item design-item" onclick="navigateToApp('design')">
+                <div class="menu-icon">🎨</div>
+                <div>DESIGN</div>
+            </div>
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('SHOP', 'shop')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">🛍️</div>
+                <div>SHOP</div>
+            </div>
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('SOCIAL MEDIA', 'social')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">💬</div>
+                <div>SOCIAL MEDIA</div>
+            </div>
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('AI SEARCH ENGINE', 'ai-search')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">🔍</div>
+                <div>AI SEARCH ENGINE</div>
+            </div>
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('IWINWORDBET', 'iwinwordbet')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">🎰</div>
+                <div>IWINWORDBET</div>
+            </div>
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('IMAGE CREATION', 'image-creation')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">🖼️</div>
+                <div>IMAGE CREATION</div>
+            </div>
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('VIDEO CREATION', 'video-creation')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">🎬</div>
+                <div>VIDEO CREATION</div>
+            </div>
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('APP SCRIPT MAKER', 'app-script')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">📜</div>
+                <div>APP SCRIPT MAKER</div>
+            </div>
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('GIFT', 'gift')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">🎁</div>
+                <div>GIFT</div>
+            </div>
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('FUNDPROJECTS', 'fundprojects')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">💰</div>
+                <div>FUNDPROJECTS</div>
+            </div>
+            <!-- ✅ UPDATED: Name → Name Generator -->
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('NAME GENERATOR', 'name-generator')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">🏷️</div>
+                <div>NAME GENERATOR</div>
+            </div>
+            <!-- ✅ NEW: Product Maker -->
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('PRODUCT MAKER', 'product-maker')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">🛠️</div>
+                <div>PRODUCT MAKER</div>
+            </div>
+            <!-- ✅ NEW: Robot Planet -->
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('ROBOT PLANET', 'robot-planet')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">🤖</div>
+                <div>ROBOT PLANET</div>
+            </div>
+            <!-- ✅ NEW: Browser (FULLY FUNCTIONAL) -->
+            <div class="master-menu-item design-item" onclick="navigateToApp('browser')" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                <div class="menu-icon">🌐</div>
+                <div>BROWSER</div>
+            </div>
+            <!-- ✅ NEW: Free Beats -->
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('FREE BEATS', 'free-beats')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">🎵</div>
+                <div>FREE BEATS</div>
+            </div>
+            <!-- ✅ NEW: Free Images -->
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('FREE IMAGES', 'free-images')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">🖼️</div>
+                <div>FREE IMAGES</div>
+            </div>
+            <!-- ✅ NEW: Free Videos -->
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('FREE VIDEOS', 'free-videos')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">🎬</div>
+                <div>FREE VIDEOS</div>
+            </div>
+            <!-- ✅ NEW: CEO New Brands MENU -->
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('CEO NEW BRANDS', 'ceo-brands')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">🏢</div>
+                <div>CEO NEW BRANDS</div>
+            </div>
+            <!-- ✅ NEW: Singles Personal Menu -->
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('SINGLES PERSONAL', 'singles-personal')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">💕</div>
+                <div>SINGLES PERSONAL</div>
+            </div>
+            <!-- ✅ NEW: Internet Calling App -->
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('INTERNET CALLING', 'internet-calling')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">📞</div>
+                <div>INTERNET CALLING</div>
+            </div>
+            <!-- ✅ NEW: Text Message App -->
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('TEXT MESSAGE', 'text-message')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">💬</div>
+                <div>TEXT MESSAGE</div>
+            </div>
+            <!-- ✅ NEW: IdeaPerSeconds Menu -->
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('IDEAPERSECONDS', 'idea-per-seconds')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">💡</div>
+                <div>IDEAPERSECONDS</div>
+            </div>
+            <!-- ✅ NEW: Pilot Drive menu -->
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('PILOT DRIVE', 'pilot-drive')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">✈️</div>
+                <div>PILOT DRIVE</div>
+            </div>
+            <!-- ✅ NEW: Human 4.1 -->
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('HUMAN 4.1', 'human-4-1')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">🧬</div>
+                <div>HUMAN 4.1</div>
+            </div>
+            <!-- ✅ NEW: Space Habitat (LAST ITEM) -->
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('SPACE HABITAT', 'space-habitat')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">🚀</div>
+                <div>SPACE HABITAT</div>
+            </div>
+        </div>
+        
+        <div class="master-footer">
+            <div>THESIGNNAL Platform • All features launch within the next 2 months</div>
+            <div class="launch-date">Next launch: <span id="nextLaunchDate">Calculating...</span></div>
+        </div>
+    </div>
+    
+    <!-- =========================
+         AUTH MODALS
+         ========================= -->
+    <!-- Sign Up Modal -->
+    <div id="signupModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('signupModal')">&times;</button>
+            <h2 class="modal-title">Create Account</h2>
+            <div class="form-group">
+                <label for="signupName">Full Name</label>
+                <input type="text" id="signupName" placeholder="Enter your name">
+            </div>
+            <div class="form-group">
+                <label for="signupEmail">Email Address</label>
+                <input type="email" id="signupEmail" placeholder="you@example.com">
+            </div>
+            <div class="form-group">
+                <label for="signupPassword">Password</label>
+                <input type="password" id="signupPassword" placeholder="Create a secure password">
+            </div>
+            <button class="modal-btn" onclick="handleSignUp()">Sign Up</button>
+            <div class="modal-footer">
+                Already have an account? <a onclick="switchModal('signupModal', 'signinModal')">Sign In</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sign In Modal -->
+    <div id="signinModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('signinModal')">&times;</button>
+            <h2 class="modal-title">Welcome Back</h2>
+            <div class="form-group">
+                <label for="signinEmail">Email Address</label>
+                <input type="email" id="signinEmail" placeholder="you@example.com">
+            </div>
+            <div class="form-group">
+                <label for="signinPassword">Password</label>
+                <input type="password" id="signinPassword" placeholder="Enter your password">
+            </div>
+            <button class="modal-btn" onclick="handleSignIn()">Sign In</button>
+            <div class="modal-footer">
+                Don't have an account? <a onclick="switchModal('signinModal', 'signupModal')">Sign Up</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ✅ ENHANCED User Profile Modal with Editable Fields -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('profileModal')">&times;</button>
+            <h2 class="modal-title">My Profile</h2>
+            
+            <!-- Profile View Mode -->
+            <div class="profile-view" id="profileView">
+                <div class="profile-section">
+                    <div class="profile-avatar-container">
+                        <div class="profile-avatar" id="profileAvatar">U</div>
+                        <label class="avatar-upload" title="Change Avatar">📷
+                            <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
+                        </label>
+                    </div>
+                    <div class="profile-name" id="profileName">User Name</div>
+                    <div class="profile-email" id="profileEmail">user@example.com</div>
+                    
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <span class="stat-value" id="statDesigns">0</span>
+                            <span class="stat-label">Designs</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="statProjects">0</span>
+                            <span class="stat-label">Projects</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="statDays">0</span>
+                            <span class="stat-label">Member</span>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-actions">
+                        <button class="profile-btn profile-edit" onclick="toggleProfileEdit()">✏️ Edit Profile</button>
+                        <button class="profile-btn profile-logout" onclick="handleLogout()">🚪 Sign Out</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Profile Edit Mode -->
+            <div class="profile-form" id="profileForm">
+                <div class="form-group">
+                    <label for="editName">Display Name</label>
+                    <input type="text" id="editName" placeholder="Your name">
+                </div>
+                <div class="form-group">
+                    <label for="editBio">Bio / About Me</label>
+                    <textarea id="editBio" placeholder="Tell us about yourself..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editLocation">Location (Optional)</label>
+                    <input type="text" id="editLocation" placeholder="City, Country">
+                </div>
+                <div class="form-group">
+                    <label for="editWebsite">Website (Optional)</label>
+                    <input type="url" id="editWebsite" placeholder="https://yourwebsite.com">
+                </div>
+                <div class="profile-actions">
+                    <button class="profile-btn profile-save" onclick="saveProfileChanges()">💾 Save Changes</button>
+                    <button class="profile-btn profile-edit" onclick="toggleProfileEdit()">↩️ Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Coming Soon Modal -->
+    <div id="comingSoonModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('comingSoonModal')">&times;</button>
+            <div class="coming-soon-content">
+                <div class="feature-icon" id="comingSoonIcon">🚀</div>
+                <h2 class="feature-name" id="comingSoonTitle">Feature Name</h2>
+                <p class="feature-desc" id="comingSoonDesc">This amazing feature is currently in development and will be available soon. Get ready for an incredible experience!</p>
+                
+                <div class="countdown-container">
+                    <div class="countdown-title">Launching in:</div>
+                    <div class="countdown-timer">
+                        <div class="countdown-item">
+                            <span class="countdown-value" id="countDays">00</span>
+                            <span class="countdown-label">Days</span>
+                        </div>
+                        <div class="countdown-item">
+                            <span class="countdown-value" id="countHours">00</span>
+                            <span class="countdown-label">Hours</span>
+                        </div>
+                        <div class="countdown-item">
+                            <span class="countdown-value" id="countMinutes">00</span>
+                            <span class="countdown-label">Minutes</span>
+                        </div>
+                        <div class="countdown-item">
+                            <span class="countdown-value" id="countSeconds">00</span>
+                            <span class="countdown-label">Seconds</span>
+                        </div>
+                    </div>
+                    <div class="launch-date-display">
+                        Launch Date: <span id="launchDateDisplay">Calculating...</span>
+                    </div>
+                </div>
+                
+                <button class="modal-btn notify-btn" onclick="notifyMe()">🔔 Notify Me When Ready</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- =========================
+         BROWSER APP (FULLY FUNCTIONAL)
+         ========================= -->
+    <div id="browserApp">
+        <div class="browser-header">
+            <button class="browser-nav-btn" onclick="browserBack()" title="Back">←</button>
+            <button class="browser-nav-btn" onclick="browserForward()" title="Forward">→</button>
+            <button class="browser-nav-btn" onclick="browserRefresh()" title="Refresh">⟳</button>
+            
+            <div class="browser-tabs" id="browserTabs">
+                <!-- Tabs will be added dynamically -->
+            </div>
+            
+            <div class="browser-tab new-tab" onclick="addBrowserTab()" title="New Tab">+</div>
+            
+            <div class="browser-url-bar">
+                <input type="text" id="browserUrlInput" placeholder="Search or enter website URL..." onkeypress="handleUrlKeypress(event)">
+                <button class="browser-nav-btn" onclick="navigateToUrl()" title="Go">➜</button>
+            </div>
+            
+            <button class="browser-nav-btn" onclick="closeBrowserApp()" title="Close Browser">✕</button>
+        </div>
+        
+        <div class="browser-content">
+            <div class="browser-iframe-container" id="browserIframeContainer">
+                <!-- Iframes will be added dynamically -->
+                <div class="browser-placeholder" id="browserPlaceholder">
+                    <div class="browser-placeholder-icon">🌐</div>
+                    <h3>Welcome to THESIGNNAL Browser</h3>
+                    <p>Open a new tab or enter a URL to start browsing. Each tab retains its state independently.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <button class="browser-back-btn" id="browserBackBtn" onclick="navigateToMasterMenu()">
+        <span>←</span> Master Menu
+    </button>
+    
+    <!-- =========================
+         DESIGN APP (EXISTING CODE - UNCHANGED FUNCTIONALITY)
+         ========================= -->
     <!-- TOPBAR - WITH ALL BUTTONS & FAST SWIPE -->
     <div class="topbar" id="topbar">
         <div class="topbar-scroll" id="topbarScroll">
@@ -397,12 +1696,17 @@
     <div id="masterSwitch" title="Toggle UI Panels">
         <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
     </div>
+    
+    <!-- BACK TO MASTER BUTTON (for Design App) -->
+    <button id="backToMasterBtn" onclick="navigateToMasterMenu()">
+        <span>←</span> Master Menu
+    </button>
 
     <input type="file" id="imageInput" accept="image/*" style="display:none">
 
 <script>
     // =========================
-    // GLOBAL STATE
+    // GLOBAL STATE & APP CONFIG
     // =========================
     let CW = 1080, CH = 1920;
     let zoomLevel = 1;
@@ -416,6 +1720,43 @@
     let defaultShapeFill = '#4CAF50';
     let defaultShapeStroke = '#000000';
     let defaultSelectionColor = '#00d67a';
+    
+    // App state
+    let currentUser = null;
+    let countdownInterval = null;
+    let currentFeatureLaunchDate = null;
+    
+    // Browser state
+    let browserTabs = [];
+    let activeTabId = null;
+    let tabCounter = 1;
+    
+    // Feature descriptions for coming soon modal
+    const featureDescriptions = {
+        'shop': 'Browse and purchase premium design assets, templates, and creative tools from our curated marketplace.',
+        'social': 'Connect with other creators, share your designs, get feedback, and collaborate on projects.',
+        'ai-search': 'Find inspiration and resources instantly with our AI-powered search that understands your creative intent.',
+        'iwinwordbet': 'Engage in creative challenges and word games with rewards for the most innovative designs.',
+        'image-creation': 'Generate stunning AI-powered images from text prompts with advanced customization options.',
+        'video-creation': 'Create professional videos with our intuitive timeline editor, effects, and AI assistance.',
+        'app-script': 'Build functional app prototypes and scripts with our no-code visual programming interface.',
+        'gift': 'Send personalized digital gifts, design credits, and premium features to friends and collaborators.',
+        'fundprojects': 'Crowdfund your creative projects or support other designers with our integrated funding platform.',
+        'name-generator': 'Generate unique, brandable names for your projects, businesses, and creative ventures with AI assistance.',
+        'product-maker': 'Design and prototype physical and digital products with our intuitive 3D modeling and specification tools.',
+        'robot-planet': 'Explore a virtual world of AI robots, customize your own bot, and interact with a community of creators.',
+        'free-beats': 'Access a library of royalty-free music beats and loops for your creative projects.',
+        'free-images': 'Browse and download high-quality, free-to-use images for your designs and content.',
+        'free-videos': 'Discover and use free stock video clips and motion graphics for your projects.',
+        'ceo-brands': 'Launch and manage your new brand ventures with CEO-level tools and resources.',
+        'singles-personal': 'Connect with like-minded individuals through our personalized singles networking platform.',
+        'internet-calling': 'Make crystal-clear voice and video calls over the internet with end-to-end encryption.',
+        'text-message': 'Send secure, feature-rich text messages with media support and group chat capabilities.',
+        'idea-per-seconds': 'Capture, organize, and develop your creative ideas with our rapid ideation platform.',
+        'pilot-drive': 'Navigate your projects with precision using our advanced project management and automation tools.',
+        'human-4-1': 'Explore the future of human enhancement with cutting-edge bio-tech and wellness innovations.',
+        'space-habitat': 'Design and simulate sustainable living spaces for Earth and beyond with our space architecture tools.'
+    };
     
     // Canvas setup
     const canvas = new fabric.Canvas('designCanvas', {
@@ -441,30 +1782,672 @@
     const gridOverlay = document.getElementById('grid-overlay');
     const imageInput = document.getElementById('imageInput');
     const topbarScroll = document.getElementById('topbarScroll');
-
+    const masterMenuOverlay = document.getElementById('masterMenuOverlay');
+    const backToMasterBtn = document.getElementById('backToMasterBtn');
+    const userGreeting = document.getElementById('userGreeting');
+    const greetingName = document.getElementById('greetingName');
+    const browserApp = document.getElementById('browserApp');
+    const browserBackBtn = document.getElementById('browserBackBtn');
+    const browserTabsContainer = document.getElementById('browserTabs');
+    const browserIframeContainer = document.getElementById('browserIframeContainer');
+    const browserUrlInput = document.getElementById('browserUrlInput');
+    const browserPlaceholder = document.getElementById('browserPlaceholder');
+    
     // Panning State
     let panOffset = { x: 0, y: 0 };
 
     // =========================
-    // ✅ TOPBAR SWIPE: Native browser scrolling for ultra-fast mobile swipe
+    // AUTHENTICATION SYSTEM
+    // =========================
+    function initAuth() {
+        // Check for existing session
+        const savedUser = localStorage.getItem('thesignnal_user');
+        if (savedUser) {
+            currentUser = JSON.parse(savedUser);
+            updateAuthUI();
+        }
+        
+        // Set next launch date display
+        updateNextLaunchDateDisplay();
+    }
+    
+    function updateAuthUI() {
+        if (currentUser) {
+            // User is logged in
+            document.querySelector('.auth-buttons').style.display = 'none';
+            greetingName.textContent = currentUser.name.split(' ')[0];
+            userGreeting.classList.add('visible');
+            
+            // Update profile modal
+            updateProfileDisplay();
+            
+            // Update stats (mock data for demo)
+            document.getElementById('statDesigns').textContent = currentUser.designs?.length || Math.floor(Math.random() * 15) + 1;
+            document.getElementById('statProjects').textContent = currentUser.projects?.length || Math.floor(Math.random() * 8) + 1;
+            
+            const joinDate = new Date(currentUser.createdAt || Date.now());
+            const days = Math.floor((new Date() - joinDate) / (1000 * 60 * 60 * 24));
+            document.getElementById('statDays').textContent = days > 0 ? days : 1;
+        } else {
+            // User is not logged in
+            document.querySelector('.auth-buttons').style.display = 'flex';
+            userGreeting.classList.remove('visible');
+        }
+    }
+    
+    function updateProfileDisplay() {
+        if (!currentUser) return;
+        
+        document.getElementById('profileName').textContent = currentUser.name;
+        document.getElementById('profileEmail').textContent = currentUser.email;
+        document.getElementById('profileAvatar').innerHTML = currentUser.avatar ? 
+            `<img src="${currentUser.avatar}" alt="Avatar">` : 
+            currentUser.name.charAt(0).toUpperCase();
+        
+        // Populate edit form with current data
+        document.getElementById('editName').value = currentUser.name || '';
+        document.getElementById('editBio').value = currentUser.bio || '';
+        document.getElementById('editLocation').value = currentUser.location || '';
+        document.getElementById('editWebsite').value = currentUser.website || '';
+    }
+    
+    function handleSignUp() {
+        const name = document.getElementById('signupName').value.trim();
+        const email = document.getElementById('signupEmail').value.trim();
+        const password = document.getElementById('signupPassword').value;
+        
+        if (!name || !email || !password) {
+            alert('Please fill in all fields');
+            return;
+        }
+        
+        if (password.length < 6) {
+            alert('Password must be at least 6 characters');
+            return;
+        }
+        
+        // Check if user already exists
+        const users = JSON.parse(localStorage.getItem('thesignnal_users') || '[]');
+        if (users.some(u => u.email === email)) {
+            alert('An account with this email already exists');
+            return;
+        }
+        
+        // Create new user
+        const newUser = {
+            id: Date.now().toString(),
+            name: name,
+            email: email,
+            password: btoa(password), // Simple encoding for demo (NOT secure for production)
+            createdAt: new Date().toISOString(),
+            designs: [],
+            projects: [],
+            bio: '',
+            location: '',
+            website: '',
+            avatar: null
+        };
+        
+        users.push(newUser);
+        localStorage.setItem('thesignnal_users', JSON.stringify(users));
+        localStorage.setItem('thesignnal_user', JSON.stringify(newUser));
+        
+        currentUser = newUser;
+        closeModal('signupModal');
+        updateAuthUI();
+        alert('Account created successfully! Welcome to THESIGNNAL 🎉');
+    }
+    
+    function handleSignIn() {
+        const email = document.getElementById('signinEmail').value.trim();
+        const password = document.getElementById('signinPassword').value;
+        
+        if (!email || !password) {
+            alert('Please enter your email and password');
+            return;
+        }
+        
+        const users = JSON.parse(localStorage.getItem('thesignnal_users') || '[]');
+        const user = users.find(u => u.email === email && u.password === btoa(password));
+        
+        if (user) {
+            localStorage.setItem('thesignnal_user', JSON.stringify(user));
+            currentUser = user;
+            closeModal('signinModal');
+            updateAuthUI();
+            alert(`Welcome back, ${user.name.split(' ')[0]}! ✨`);
+        } else {
+            alert('Invalid email or password. Please try again or sign up for a new account.');
+        }
+    }
+    
+    function handleLogout() {
+        localStorage.removeItem('thesignnal_user');
+        currentUser = null;
+        closeModal('profileModal');
+        updateAuthUI();
+        alert('You have been signed out successfully.');
+    }
+    
+    function openProfile() {
+        if (!currentUser) {
+            openModal('signinModal');
+            return;
+        }
+        updateProfileDisplay();
+        openModal('profileModal');
+    }
+    
+    function toggleProfileEdit() {
+        const view = document.getElementById('profileView');
+        const form = document.getElementById('profileForm');
+        
+        if (form.classList.contains('active')) {
+            // Cancel edit - restore view
+            form.classList.remove('active');
+            view.classList.remove('hidden');
+            updateProfileDisplay();
+        } else {
+            // Enter edit mode
+            view.classList.add('hidden');
+            form.classList.add('active');
+            updateProfileDisplay(); // Populate form with current data
+        }
+    }
+    
+    function saveProfileChanges() {
+        if (!currentUser) return;
+        
+        const newName = document.getElementById('editName').value.trim();
+        const newBio = document.getElementById('editBio').value.trim();
+        const newLocation = document.getElementById('editLocation').value.trim();
+        const newWebsite = document.getElementById('editWebsite').value.trim();
+        
+        if (!newName) {
+            alert('Display name is required');
+            return;
+        }
+        
+        // Update user data
+        currentUser.name = newName;
+        currentUser.bio = newBio;
+        currentUser.location = newLocation;
+        currentUser.website = newWebsite;
+        
+        // Save to localStorage
+        const users = JSON.parse(localStorage.getItem('thesignnal_users') || '[]');
+        const userIndex = users.findIndex(u => u.id === currentUser.id);
+        if (userIndex !== -1) {
+            users[userIndex] = currentUser;
+            localStorage.setItem('thesignnal_users', JSON.stringify(users));
+        }
+        localStorage.setItem('thesignnal_user', JSON.stringify(currentUser));
+        
+        // Update UI
+        updateProfileDisplay();
+        updateAuthUI();
+        
+        // Switch back to view mode
+        toggleProfileEdit();
+        alert('Profile updated successfully! ✨');
+    }
+    
+    function handleAvatarUpload(event) {
+        const file = event.target.files[0];
+        if (!file || !file.type.match('image.*')) {
+            alert('Please select a valid image file');
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            if (!currentUser) return;
+            
+            // Save avatar as data URL (for demo - in production, upload to server)
+            currentUser.avatar = e.target.result;
+            
+            // Save to localStorage
+            const users = JSON.parse(localStorage.getItem('thesignnal_users') || '[]');
+            const userIndex = users.findIndex(u => u.id === currentUser.id);
+            if (userIndex !== -1) {
+                users[userIndex] = currentUser;
+                localStorage.setItem('thesignnal_users', JSON.stringify(users));
+            }
+            localStorage.setItem('thesignnal_user', JSON.stringify(currentUser));
+            
+            // Update display
+            updateProfileDisplay();
+            updateAuthUI();
+            alert('Avatar updated! 🎨');
+        };
+        reader.readAsDataURL(file);
+        event.target.value = ''; // Reset input
+    }
+    
+    // =========================
+    // MODAL SYSTEM
+    // =========================
+    function openModal(modalId) {
+        document.getElementById(modalId).classList.add('active');
+        // Prevent background scrolling
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+        // Restore background scrolling
+        document.body.style.overflow = '';
+    }
+    
+    function switchModal(closeId, openId) {
+        closeModal(closeId);
+        setTimeout(() => openModal(openId), 300);
+    }
+    
+    // Close modals when clicking outside
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal(modal.id);
+            }
+        });
+    });
+    
+    // Close modals with Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal.active').forEach(modal => {
+                closeModal(modal.id);
+            });
+        }
+    });
+    
+    // =========================
+    // NAVIGATION SYSTEM
+    // =========================
+    function navigateToMasterMenu() {
+        // Hide all apps
+        topbar.classList.add('hidden');
+        sidebar?.classList.add('hidden');
+        statusbar.classList.add('hidden');
+        backToMasterBtn.classList.remove('visible');
+        browserApp.classList.remove('active');
+        browserBackBtn.classList.remove('visible');
+        
+        // Show master menu
+        masterMenuOverlay.classList.remove('hidden');
+        
+        // Pause canvas interactions
+        canvas.selection = false;
+        canvas.forEachObject(obj => { obj.selectable = false; obj.evented = false; });
+        
+        // Update workspace margin
+        if (sidebar && window.innerWidth >= 768) {
+            workspace.classList.add('expanded');
+        }
+    }
+    
+    function navigateToApp(appName) {
+        if (appName === 'design') {
+            // Check if user is logged in for design app
+            if (!currentUser) {
+                alert('Please sign in to use the Design Studio');
+                openModal('signinModal');
+                return;
+            }
+            
+            // Hide master menu
+            masterMenuOverlay.classList.add('hidden');
+            
+            // Show design app UI
+            topbar.classList.remove('hidden');
+            if (sidebar && window.innerWidth >= 768) {
+                sidebar.classList.remove('hidden');
+                workspace.classList.remove('expanded');
+            }
+            statusbar.classList.remove('hidden');
+            backToMasterBtn.classList.add('visible');
+            
+            // Resume canvas interactions
+            canvas.selection = true;
+            canvas.forEachObject(obj => { 
+                obj.selectable = !dragMode; 
+                obj.evented = !dragMode; 
+            });
+            
+            // Focus canvas
+            canvasContainer.focus();
+            canvas.renderAll();
+            
+        } else if (appName === 'browser') {
+            // Open the built-in browser
+            masterMenuOverlay.classList.add('hidden');
+            browserApp.classList.add('active');
+            browserBackBtn.classList.add('visible');
+            
+            // Initialize browser if first time
+            if (browserTabs.length === 0) {
+                addBrowserTab('https://www.example.com', 'Welcome');
+            }
+        }
+    }
+    
+    function showComingSoon(featureName, featureKey) {
+        // Set modal content
+        document.getElementById('comingSoonTitle').textContent = featureName;
+        document.getElementById('comingSoonDesc').textContent = featureDescriptions[featureKey] || 'This feature is currently in development and will be available soon.';
+        
+        // Set icon based on feature
+        const icons = {
+            'shop': '🛍️', 'social': '💬', 'ai-search': '🔍', 'iwinwordbet': '🎰',
+            'image-creation': '🖼️', 'video-creation': '🎬', 'app-script': '📜',
+            'gift': '🎁', 'fundprojects': '💰', 'name-generator': '🏷️',
+            'product-maker': '🛠️', 'robot-planet': '🤖', 'free-beats': '🎵',
+            'free-images': '🖼️', 'free-videos': '🎬', 'ceo-brands': '🏢',
+            'singles-personal': '💕', 'internet-calling': '📞', 'text-message': '💬',
+            'idea-per-seconds': '💡', 'pilot-drive': '✈️', 'human-4-1': '🧬',
+            'space-habitat': '🚀'
+        };
+        document.getElementById('comingSoonIcon').textContent = icons[featureKey] || '🚀';
+        
+        // Calculate launch date (2 months from today)
+        const today = new Date();
+        const launchDate = new Date();
+        launchDate.setMonth(today.getMonth() + 2);
+        currentFeatureLaunchDate = launchDate;
+        
+        // Update launch date display
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('launchDateDisplay').textContent = launchDate.toLocaleDateString('en-US', options);
+        
+        // Start countdown
+        startCountdown(launchDate);
+        
+        // Show modal
+        openModal('comingSoonModal');
+    }
+    
+    function startCountdown(launchDate) {
+        // Clear any existing interval
+        if (countdownInterval) clearInterval(countdownInterval);
+        
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = launchDate.getTime() - now;
+            
+            if (distance < 0) {
+                // Launch date has passed
+                document.getElementById('countDays').textContent = '00';
+                document.getElementById('countHours').textContent = '00';
+                document.getElementById('countMinutes').textContent = '00';
+                document.getElementById('countSeconds').textContent = '00';
+                clearInterval(countdownInterval);
+                return;
+            }
+            
+            // Calculate time components
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            // Update display
+            document.getElementById('countDays').textContent = days.toString().padStart(2, '0');
+            document.getElementById('countHours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('countMinutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('countSeconds').textContent = seconds.toString().padStart(2, '0');
+        }
+        
+        // Update immediately and then every second
+        updateCountdown();
+        countdownInterval = setInterval(updateCountdown, 1000);
+    }
+    
+    function updateNextLaunchDateDisplay() {
+        const today = new Date();
+        const nextLaunch = new Date();
+        nextLaunch.setMonth(today.getMonth() + 2);
+        
+        const options = { month: 'short', day: 'numeric' };
+        document.getElementById('nextLaunchDate').textContent = nextLaunch.toLocaleDateString('en-US', options);
+    }
+    
+    function notifyMe() {
+        if (!currentUser) {
+            alert('Please sign in to receive launch notifications');
+            openModal('signinModal');
+            return;
+        }
+        
+        alert(`🔔 You'll be notified when ${document.getElementById('comingSoonTitle').textContent} launches! Check your profile for updates.`);
+        closeModal('comingSoonModal');
+    }
+    
+    // =========================
+    // ✅ BROWSER FUNCTIONALITY
+    // =========================
+    function addBrowserTab(url = 'https://www.example.com', title = 'New Tab') {
+        const tabId = `tab-${Date.now()}-${tabCounter++}`;
+        
+        // Create tab element
+        const tab = document.createElement('div');
+        tab.className = 'browser-tab';
+        tab.id = tabId;
+        tab.innerHTML = `
+            <span class="tab-title">${title}</span>
+            <span class="close-tab" onclick="closeBrowserTab('${tabId}', event)">×</span>
+        `;
+        tab.onclick = (e) => {
+            if (!e.target.classList.contains('close-tab')) {
+                switchBrowserTab(tabId);
+            }
+        };
+        
+        // Create iframe container
+        const iframeContainer = document.createElement('div');
+        iframeContainer.className = 'browser-iframe';
+        iframeContainer.id = `iframe-${tabId}`;
+        
+        // Create actual iframe (with sandbox for security)
+        const iframe = document.createElement('iframe');
+        iframe.src = url;
+        iframe.sandbox = 'allow-same-origin allow-scripts allow-popups allow-forms';
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.border = 'none';
+        iframe.loading = 'lazy';
+        
+        iframeContainer.appendChild(iframe);
+        browserIframeContainer.appendChild(iframeContainer);
+        
+        // Add to tabs array
+        browserTabs.push({
+            id: tabId,
+            url: url,
+            title: title,
+            history: [url],
+            historyIndex: 0
+        });
+        
+        // Insert tab before the "new tab" button
+        browserTabsContainer.insertBefore(tab, browserTabsContainer.lastElementChild);
+        
+        // Switch to new tab
+        switchBrowserTab(tabId);
+        
+        // Hide placeholder
+        browserPlaceholder.style.display = 'none';
+        
+        return tabId;
+    }
+    
+    function switchBrowserTab(tabId) {
+        // Update active tab styling
+        document.querySelectorAll('.browser-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.getElementById(tabId)?.classList.add('active');
+        
+        // Show/hide iframes
+        browserTabs.forEach(tab => {
+            const iframe = document.getElementById(`iframe-${tab.id}`);
+            if (iframe) {
+                iframe.classList.toggle('hidden', tab.id !== tabId);
+            }
+        });
+        
+        // Update URL bar
+        const tab = browserTabs.find(t => t.id === tabId);
+        if (tab) {
+            activeTabId = tabId;
+            browserUrlInput.value = tab.url;
+        }
+    }
+    
+    function closeBrowserTab(tabId, event) {
+        if (event) event.stopPropagation();
+        
+        const tabIndex = browserTabs.findIndex(t => t.id === tabId);
+        if (tabIndex === -1) return;
+        
+        // Remove tab element
+        const tabElement = document.getElementById(tabId);
+        if (tabElement) tabElement.remove();
+        
+        // Remove iframe
+        const iframe = document.getElementById(`iframe-${tabId}`);
+        if (iframe) iframe.remove();
+        
+        // Remove from array
+        browserTabs.splice(tabIndex, 1);
+        
+        // If closing active tab, switch to another
+        if (activeTabId === tabId) {
+            if (browserTabs.length > 0) {
+                const newIndex = Math.min(tabIndex, browserTabs.length - 1);
+                switchBrowserTab(browserTabs[newIndex].id);
+            } else {
+                // No tabs left - show placeholder
+                browserPlaceholder.style.display = 'block';
+                activeTabId = null;
+                browserUrlInput.value = '';
+            }
+        }
+    }
+    
+    function navigateToUrl() {
+        if (!activeTabId) {
+            addBrowserTab();
+            return;
+        }
+        
+        let url = browserUrlInput.value.trim();
+        if (!url) return;
+        
+        // Add protocol if missing
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            // Check if it looks like a domain
+            if (url.includes('.') && !url.includes(' ')) {
+                url = 'https://' + url;
+            } else {
+                // Treat as search query
+                url = 'https://duckduckgo.com/?q=' + encodeURIComponent(url);
+            }
+        }
+        
+        // Update current tab
+        const tab = browserTabs.find(t => t.id === activeTabId);
+        if (tab) {
+            tab.url = url;
+            tab.title = new URL(url).hostname || 'Loading...';
+            
+            // Update tab display
+            const tabElement = document.getElementById(activeTabId);
+            if (tabElement) {
+                tabElement.querySelector('.tab-title').textContent = tab.title;
+            }
+            
+            // Update iframe
+            const iframe = document.querySelector(`#iframe-${activeTabId} iframe`);
+            if (iframe) {
+                iframe.src = url;
+            }
+            
+            // Add to history
+            tab.history = tab.history.slice(0, tab.historyIndex + 1);
+            tab.history.push(url);
+            tab.historyIndex = tab.history.length - 1;
+        }
+    }
+    
+    function handleUrlKeypress(event) {
+        if (event.key === 'Enter') {
+            navigateToUrl();
+        }
+    }
+    
+    function browserBack() {
+        if (!activeTabId) return;
+        const tab = browserTabs.find(t => t.id === activeTabId);
+        if (!tab || tab.historyIndex <= 0) return;
+        
+        tab.historyIndex--;
+        const url = tab.history[tab.historyIndex];
+        tab.url = url;
+        
+        // Update UI
+        browserUrlInput.value = url;
+        const iframe = document.querySelector(`#iframe-${activeTabId} iframe`);
+        if (iframe) iframe.src = url;
+    }
+    
+    function browserForward() {
+        if (!activeTabId) return;
+        const tab = browserTabs.find(t => t.id === activeTabId);
+        if (!tab || tab.historyIndex >= tab.history.length - 1) return;
+        
+        tab.historyIndex++;
+        const url = tab.history[tab.historyIndex];
+        tab.url = url;
+        
+        // Update UI
+        browserUrlInput.value = url;
+        const iframe = document.querySelector(`#iframe-${activeTabId} iframe`);
+        if (iframe) iframe.src = url;
+    }
+    
+    function browserRefresh() {
+        if (!activeTabId) return;
+        const iframe = document.querySelector(`#iframe-${activeTabId} iframe`);
+        if (iframe) iframe.src = iframe.src;
+    }
+    
+    function closeBrowserApp() {
+        browserApp.classList.remove('active');
+        browserBackBtn.classList.remove('visible');
+        masterMenuOverlay.classList.remove('hidden');
+        
+        // Optional: Clear tabs or keep them for next session
+        // For now, we'll keep them
+    }
+    
+    // =========================
+    // TOPBAR SWIPE: Native browser scrolling for ultra-fast mobile swipe
     // =========================
     function setupTopbarSwipe() {
-        // Let the browser handle native horizontal scrolling
-        // Just ensure touch-action allows pan-x and momentum scrolling is enabled via CSS
         if (isMobile) {
-            // Add visual feedback for swipe
             let startX = 0;
             let isSwiping = false;
             
             topbarScroll.addEventListener('touchstart', (e) => {
                 startX = e.touches[0].clientX;
                 isSwiping = true;
-                topbarScroll.style.scrollBehavior = 'auto'; // Instant response
+                topbarScroll.style.scrollBehavior = 'auto';
             }, { passive: true });
             
             topbarScroll.addEventListener('touchend', () => {
                 isSwiping = false;
-                topbarScroll.style.scrollBehavior = 'smooth'; // Restore smooth after swipe
+                topbarScroll.style.scrollBehavior = 'smooth';
             });
         }
     }
@@ -751,7 +2734,7 @@
     let panState = { active: false, lastX: 0, lastY: 0, startPanX: 0, startPanY: 0 };
 
     function startPan(e) {
-        if (e.target.closest('.canvas-handle, input, button, .dropdown, .topbar-btn, .sidebar, .statusbar, #masterSwitch')) return;
+        if (e.target.closest('.canvas-handle, input, button, .dropdown, .topbar-btn, .sidebar, .statusbar, #masterSwitch, #backToMasterBtn, .browser-back-btn')) return;
         
         e.preventDefault();
         e.stopPropagation();
@@ -961,19 +2944,24 @@
     function handleResize() {
         applyCanvasTransform();
         updateCanvasInfo();
-        if (window.innerWidth <= 767) { masterSwitch.style.right = '16px'; masterSwitch.style.bottom = 'calc(42px + env(safe-area-inset-bottom))'; }
+        if (window.innerWidth <= 767) { 
+            masterSwitch.style.right = '16px'; 
+            masterSwitch.style.bottom = 'calc(42px + env(safe-area-inset-bottom))'; 
+        }
     }
 
     // =========================
     // INIT
     // =========================
     window.addEventListener('load', () => {
+        // Initialize auth system first
+        initAuth();
+        
+        // Initialize canvas and design app
         initCanvas();
         setupCanvasHandle();
         setupZoomGestures();
         setupMasterSwitch();
-        
-        // ✅ ENABLE ULTRA-FAST TOPBAR SWIPE
         setupTopbarSwipe();
         
         // Add pan listeners to canvas container for background panning
@@ -985,15 +2973,22 @@
         document.addEventListener('touchend', endPan);
         document.addEventListener('touchcancel', endPan);
         
-        if (isMobile) { masterSwitch.style.right = '16px'; masterSwitch.style.bottom = 'calc(42px + env(safe-area-inset-bottom))'; }
-        else { masterSwitch.style.right = '24px'; masterSwitch.style.bottom = 'calc(48px + env(safe-area-inset-bottom))'; }
+        if (isMobile) { 
+            masterSwitch.style.right = '16px'; 
+            masterSwitch.style.bottom = 'calc(42px + env(safe-area-inset-bottom))'; 
+        } else { 
+            masterSwitch.style.right = '24px'; 
+            masterSwitch.style.bottom = 'calc(48px + env(safe-area-inset-bottom))'; 
+        }
         
         window.addEventListener('resize', handleResize);
         window.addEventListener('orientationchange', () => setTimeout(handleResize, 300));
         topbarScroll?.addEventListener('scroll', () => document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('active')));
         
-        updateCanvasInfo(); updateObjectInfo();
-        console.log('✅ Design Studio: Ultra-fast swipe + ALL buttons visible + center-zoom + panning active');
+        updateCanvasInfo(); 
+        updateObjectInfo();
+        
+        console.log('✅ THESIGNNAL Platform: All features updated, mobile scrolling fixed, red ribbons removed');
     });
 
     // Prevent pull-to-refresh on canvas ONLY (allow topbar scroll)
