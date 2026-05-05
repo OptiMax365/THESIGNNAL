@@ -16,9 +16,9 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
             -webkit-tap-highlight-color: transparent;
             -webkit-touch-callout: none;
-            touch-action: none;
         }
 
+        /* ✅ FIXED: Allow text selection in inputs only */
         input, textarea, .fabric-editing *, [contenteditable="true"] {
             user-select: text !important;
             -webkit-user-select: text !important;
@@ -38,6 +38,8 @@
             max-width: 100vw;
             overscroll-behavior: none;
             -webkit-overflow-scrolling: touch;
+            /* ✅ FIXED: Allow scrolling on master menu */
+            touch-action: pan-y;
         }
 
         /* =========================
@@ -54,14 +56,17 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             padding: 20px;
+            padding-top: calc(60px + env(safe-area-inset-top));
             transition: opacity 0.4s ease, visibility 0.4s ease;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             /* ✅ FIXED: Enable vertical scrolling on mobile */
             touch-action: pan-y !important;
             scroll-behavior: smooth;
+            /* ✅ FIXED: Ensure content is visible */
+            align-content: flex-start;
         }
         
         #masterMenuOverlay.hidden {
@@ -72,9 +77,10 @@
         
         .master-header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             max-width: 90%;
             flex-shrink: 0;
+            padding-top: 10px;
         }
         
         .master-logo {
@@ -89,7 +95,7 @@
         .master-subtitle {
             color: rgba(255,255,255,0.92);
             font-size: 1.1rem;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             max-width: 500px;
             line-height: 1.4;
         }
@@ -97,7 +103,7 @@
         .auth-buttons {
             display: flex;
             gap: 12px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
             justify-content: center;
             flex-shrink: 0;
@@ -164,6 +170,8 @@
             padding: 10px;
             /* ✅ Allow grid to scroll on mobile */
             flex-shrink: 0;
+            /* ✅ FIXED: Ensure all items are visible */
+            align-content: start;
         }
         
         .master-menu-item {
@@ -212,9 +220,6 @@
             overflow: hidden;
         }
         
-        /* ✅ REMOVED: Red COMING SOON ribbon */
-        /* .master-menu-item.coming-soon::after { ... } */
-        
         /* ✅ BLINKING WIFI INDICATOR FOR COMING SOON */
         .wifi-indicator {
             position: absolute;
@@ -244,6 +249,7 @@
         
         .master-footer {
             margin-top: 25px;
+            margin-bottom: 80px;
             color: rgba(255,255,255,0.85);
             font-size: 0.9rem;
             text-align: center;
@@ -1076,9 +1082,63 @@
         .statusbar { position: fixed; bottom: env(safe-area-inset-bottom); left: 0; right: 0; padding: 6px 14px; border-top: 1px solid rgba(0,0,0,0.08); display: flex; justify-content: space-between; align-items: center; font-size: 11px; background: linear-gradient(135deg, #025f3b, #037a4d); color: rgba(255,255,255,0.95); z-index: 1000; transition: transform 0.3s ease, opacity 0.3s ease; min-height: 34px; }
         .statusbar.hidden { transform: translateY(100%); opacity: 0; pointer-events: none; }
 
-        #masterSwitch { width: 54px; height: 54px; background: radial-gradient(circle, #00ff88, #00cc66); border: 3px solid rgba(255,255,255,0.4); border-radius: 50%; position: fixed; bottom: calc(48px + env(safe-area-inset-bottom)); right: 24px; cursor: pointer; z-index: 999999; box-shadow: 0 6px 24px rgba(0,204,102,0.5), 0 3px 12px rgba(0,0,0,0.2), inset 0 0 20px rgba(255,255,255,0.25); transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; user-select: none; touch-action: manipulation; }
+        /* ✅ GREEN SWITCH BUTTON - Bottom Right */
+        #masterSwitch { 
+            width: 54px; 
+            height: 54px; 
+            background: radial-gradient(circle, #00ff88, #00cc66); 
+            border: 3px solid rgba(255,255,255,0.4); 
+            border-radius: 50%; 
+            position: fixed; 
+            bottom: calc(48px + env(safe-area-inset-bottom)); 
+            right: 24px; 
+            cursor: pointer; 
+            z-index: 999999; 
+            box-shadow: 0 6px 24px rgba(0,204,102,0.5), 0 3px 12px rgba(0,0,0,0.2), inset 0 0 20px rgba(255,255,255,0.25); 
+            transition: all 0.2s ease; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            user-select: none; 
+            touch-action: manipulation; 
+        }
         #masterSwitch:active { transform: scale(0.94); }
         #masterSwitch svg { width: 24px; height: 24px; fill: #0a1a12; pointer-events: none; }
+
+        /* ✅ NEW: MASTER MENU BUTTON - Bottom Left (Small, Blinking, Draggable) */
+        #masterMenuBtn {
+            position: fixed;
+            bottom: calc(48px + env(safe-area-inset-bottom));
+            left: 24px;
+            z-index: 999999;
+            width: 44px;
+            height: 44px;
+            background: radial-gradient(circle, #667eea, #764ba2);
+            border: 3px solid rgba(255,255,255,0.4);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 6px 24px rgba(102, 126, 234, 0.5), 0 3px 12px rgba(0,0,0,0.2), inset 0 0 20px rgba(255,255,255,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+            animation: blink-pulse 2s infinite;
+        }
+        
+        #masterMenuBtn:active { transform: scale(0.94); }
+        #masterMenuBtn.hidden { display: none !important; }
+        #masterMenuBtn svg { width: 20px; height: 20px; fill: white; pointer-events: none; }
+        
+        @keyframes blink-pulse {
+            0%, 100% { 
+                box-shadow: 0 6px 24px rgba(102, 126, 234, 0.5), 0 3px 12px rgba(0,0,0,0.2), inset 0 0 20px rgba(255,255,255,0.25), 0 0 0 0 rgba(102, 126, 234, 0.7); 
+            }
+            50% { 
+                box-shadow: 0 6px 24px rgba(102, 126, 234, 0.5), 0 3px 12px rgba(0,0,0,0.2), inset 0 0 20px rgba(255,255,255,0.25), 0 0 0 12px rgba(102, 126, 234, 0); 
+            }
+        }
 
         @media (max-width: 767px) {
             .sidebar { display: none !important; }
@@ -1091,6 +1151,7 @@
             .zoom-display { font-size: 10px; min-width: 38px; }
             .scroll-hint { display: block; }
             #masterSwitch { right: 16px; bottom: calc(42px + env(safe-area-inset-bottom)); width: 50px; height: 50px; }
+            #masterMenuBtn { left: 16px; bottom: calc(42px + env(safe-area-inset-bottom)); width: 40px; height: 40px; }
             .master-menu-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
             .master-menu-item { min-height: 100px; padding: 16px 12px; font-size: 0.95rem; }
             .menu-icon { font-size: 1.5rem; }
@@ -1236,90 +1297,75 @@
                 <div class="menu-icon">💰</div>
                 <div>FUNDPROJECTS</div>
             </div>
-            <!-- ✅ UPDATED: Name → Name Generator -->
             <div class="master-menu-item coming-soon" onclick="showComingSoon('NAME GENERATOR', 'name-generator')">
                 <div class="wifi-indicator"></div>
                 <div class="menu-icon">🏷️</div>
                 <div>NAME GENERATOR</div>
             </div>
-            <!-- ✅ NEW: Product Maker -->
             <div class="master-menu-item coming-soon" onclick="showComingSoon('PRODUCT MAKER', 'product-maker')">
                 <div class="wifi-indicator"></div>
                 <div class="menu-icon">🛠️</div>
                 <div>PRODUCT MAKER</div>
             </div>
-            <!-- ✅ NEW: Robot Planet -->
             <div class="master-menu-item coming-soon" onclick="showComingSoon('ROBOT PLANET', 'robot-planet')">
                 <div class="wifi-indicator"></div>
                 <div class="menu-icon">🤖</div>
                 <div>ROBOT PLANET</div>
             </div>
-            <!-- ✅ NEW: Browser (FULLY FUNCTIONAL) -->
             <div class="master-menu-item design-item" onclick="navigateToApp('browser')" style="background: linear-gradient(135deg, #667eea, #764ba2);">
                 <div class="menu-icon">🌐</div>
                 <div>BROWSER</div>
             </div>
-            <!-- ✅ NEW: Free Beats -->
             <div class="master-menu-item coming-soon" onclick="showComingSoon('FREE BEATS', 'free-beats')">
                 <div class="wifi-indicator"></div>
                 <div class="menu-icon">🎵</div>
                 <div>FREE BEATS</div>
             </div>
-            <!-- ✅ NEW: Free Images -->
             <div class="master-menu-item coming-soon" onclick="showComingSoon('FREE IMAGES', 'free-images')">
                 <div class="wifi-indicator"></div>
                 <div class="menu-icon">🖼️</div>
                 <div>FREE IMAGES</div>
             </div>
-            <!-- ✅ NEW: Free Videos -->
             <div class="master-menu-item coming-soon" onclick="showComingSoon('FREE VIDEOS', 'free-videos')">
                 <div class="wifi-indicator"></div>
                 <div class="menu-icon">🎬</div>
                 <div>FREE VIDEOS</div>
             </div>
-            <!-- ✅ NEW: CEO New Brands MENU -->
             <div class="master-menu-item coming-soon" onclick="showComingSoon('CEO NEW BRANDS', 'ceo-brands')">
                 <div class="wifi-indicator"></div>
                 <div class="menu-icon">🏢</div>
                 <div>CEO NEW BRANDS</div>
             </div>
-            <!-- ✅ NEW: Singles Personal Menu -->
             <div class="master-menu-item coming-soon" onclick="showComingSoon('SINGLES PERSONAL', 'singles-personal')">
                 <div class="wifi-indicator"></div>
                 <div class="menu-icon">💕</div>
                 <div>SINGLES PERSONAL</div>
             </div>
-            <!-- ✅ NEW: Internet Calling App -->
             <div class="master-menu-item coming-soon" onclick="showComingSoon('INTERNET CALLING', 'internet-calling')">
                 <div class="wifi-indicator"></div>
                 <div class="menu-icon">📞</div>
                 <div>INTERNET CALLING</div>
             </div>
-            <!-- ✅ NEW: Text Message App -->
             <div class="master-menu-item coming-soon" onclick="showComingSoon('TEXT MESSAGE', 'text-message')">
                 <div class="wifi-indicator"></div>
                 <div class="menu-icon">💬</div>
                 <div>TEXT MESSAGE</div>
             </div>
-            <!-- ✅ NEW: IdeaPerSeconds Menu -->
             <div class="master-menu-item coming-soon" onclick="showComingSoon('IDEAPERSECONDS', 'idea-per-seconds')">
                 <div class="wifi-indicator"></div>
                 <div class="menu-icon">💡</div>
                 <div>IDEAPERSECONDS</div>
             </div>
-            <!-- ✅ NEW: Pilot Drive menu -->
             <div class="master-menu-item coming-soon" onclick="showComingSoon('PILOT DRIVE', 'pilot-drive')">
                 <div class="wifi-indicator"></div>
                 <div class="menu-icon">✈️</div>
                 <div>PILOT DRIVE</div>
             </div>
-            <!-- ✅ NEW: Human 4.1 -->
             <div class="master-menu-item coming-soon" onclick="showComingSoon('HUMAN 4.1', 'human-4-1')">
                 <div class="wifi-indicator"></div>
                 <div class="menu-icon">🧬</div>
                 <div>HUMAN 4.1</div>
             </div>
-            <!-- ✅ NEW: Space Habitat (LAST ITEM) -->
             <div class="master-menu-item coming-soon" onclick="showComingSoon('SPACE HABITAT', 'space-habitat')">
                 <div class="wifi-indicator"></div>
                 <div class="menu-icon">🚀</div>
@@ -1693,8 +1739,14 @@
         <span id="modeInfo">Select Mode</span>
     </div>
 
+    <!-- ✅ GREEN SWITCH BUTTON - Bottom Right -->
     <div id="masterSwitch" title="Toggle UI Panels">
         <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+    </div>
+    
+    <!-- ✅ NEW: MASTER MENU BUTTON - Bottom Left (Small, Blinking, Draggable) -->
+    <div id="masterMenuBtn" title="Open Master Menu">
+        <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
     </div>
     
     <!-- BACK TO MASTER BUTTON (for Design App) -->
@@ -1775,6 +1827,7 @@
     const canvasContainer = document.getElementById('canvasContainer');
     const canvasHandle = document.getElementById('canvasHandle');
     const masterSwitch = document.getElementById('masterSwitch');
+    const masterMenuBtn = document.getElementById('masterMenuBtn');
     const sidebar = document.getElementById('sidebar');
     const topbar = document.getElementById('topbar');
     const statusbar = document.getElementById('statusbar');
@@ -2426,9 +2479,6 @@
         browserApp.classList.remove('active');
         browserBackBtn.classList.remove('visible');
         masterMenuOverlay.classList.remove('hidden');
-        
-        // Optional: Clear tabs or keep them for next session
-        // For now, we'll keep them
     }
     
     // =========================
@@ -2734,7 +2784,7 @@
     let panState = { active: false, lastX: 0, lastY: 0, startPanX: 0, startPanY: 0 };
 
     function startPan(e) {
-        if (e.target.closest('.canvas-handle, input, button, .dropdown, .topbar-btn, .sidebar, .statusbar, #masterSwitch, #backToMasterBtn, .browser-back-btn')) return;
+        if (e.target.closest('.canvas-handle, input, button, .dropdown, .topbar-btn, .sidebar, .statusbar, #masterSwitch, #masterMenuBtn, #backToMasterBtn, .browser-back-btn')) return;
         
         e.preventDefault();
         e.stopPropagation();
@@ -2877,16 +2927,109 @@
     }
 
     // =========================
-    // MASTER SWITCH (UI Toggle)
+    // MASTER SWITCH (UI Toggle - Green Button Bottom Right)
     // =========================
     function setupMasterSwitch() {
         let dragging = false, moved = false, sx = 0, sy = 0, so = { l: 0, t: 0 };
-        function start(e) { e.preventDefault(); e.stopPropagation(); dragging = true; moved = false; const cx = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX; const cy = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY; sx = cx; sy = cy; so.l = masterSwitch.offsetLeft; so.t = masterSwitch.offsetTop; masterSwitch.style.transition = 'none'; }
-        function move(e) { if (!dragging) return; e.preventDefault(); const cx = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX; const cy = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY; const dx = cx - sx, dy = cy - sy; if (Math.abs(dx) > 5 || Math.abs(dy) > 5) moved = true; const mx = window.innerWidth - 54, my = window.innerHeight - 54; let nl = Math.max(12, Math.min(so.l + dx, mx)), nt = Math.max(12, Math.min(so.t + dy, my)); masterSwitch.style.left = nl + 'px'; masterSwitch.style.top = nt + 'px'; }
-        function end() { if (dragging) { if (!moved) { isUIVisible = !isUIVisible; topbar.classList.toggle('hidden', !isUIVisible); sidebar?.classList.toggle('hidden', !isUIVisible); statusbar.classList.toggle('hidden', !isUIVisible); if (sidebar && window.innerWidth >= 768) workspace.classList.toggle('expanded', !isUIVisible); } dragging = false; masterSwitch.style.transition = 'all 0.2s ease'; } }
-        masterSwitch.addEventListener('mousedown', start); masterSwitch.addEventListener('touchstart', start, { passive: false });
-        document.addEventListener('mousemove', move); document.addEventListener('mouseup', end);
-        document.addEventListener('touchmove', move, { passive: false }); document.addEventListener('touchend', end); document.addEventListener('touchcancel', end);
+        
+        function start(e) { 
+            e.preventDefault(); e.stopPropagation(); 
+            dragging = true; moved = false; 
+            const cx = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX; 
+            const cy = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY; 
+            sx = cx; sy = cy; 
+            so.l = masterSwitch.offsetLeft; so.t = masterSwitch.offsetTop; 
+            masterSwitch.style.transition = 'none'; 
+        }
+        
+        function move(e) { 
+            if (!dragging) return; 
+            e.preventDefault(); 
+            const cx = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX; 
+            const cy = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY; 
+            const dx = cx - sx, dy = cy - sy; 
+            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) moved = true; 
+            const mx = window.innerWidth - 54, my = window.innerHeight - 54; 
+            let nl = Math.max(12, Math.min(so.l + dx, mx)), nt = Math.max(12, Math.min(so.t + dy, my)); 
+            masterSwitch.style.left = nl + 'px'; masterSwitch.style.top = nt + 'px'; 
+        }
+        
+        function end() { 
+            if (dragging) { 
+                if (!moved) { 
+                    isUIVisible = !isUIVisible; 
+                    topbar.classList.toggle('hidden', !isUIVisible); 
+                    sidebar?.classList.toggle('hidden', !isUIVisible); 
+                    statusbar.classList.toggle('hidden', !isUIVisible); 
+                    if (sidebar && window.innerWidth >= 768) workspace.classList.toggle('expanded', !isUIVisible);
+                    // ✅ FIXED: Hide/show master menu button when UI is toggled
+                    masterMenuBtn.classList.toggle('hidden', !isUIVisible);
+                } 
+                dragging = false; 
+                masterSwitch.style.transition = 'all 0.2s ease'; 
+            } 
+        }
+        
+        masterSwitch.addEventListener('mousedown', start); 
+        masterSwitch.addEventListener('touchstart', start, { passive: false });
+        document.addEventListener('mousemove', move); 
+        document.addEventListener('mouseup', end);
+        document.addEventListener('touchmove', move, { passive: false }); 
+        document.addEventListener('touchend', end); 
+        document.addEventListener('touchcancel', end);
+    }
+
+    // =========================
+    // ✅ NEW: MASTER MENU BUTTON (Bottom Left - Small, Blinking, Draggable)
+    // =========================
+    function setupMasterMenuBtn() {
+        let dragging = false, moved = false, sx = 0, sy = 0, so = { l: 0, t: 0 };
+        
+        function start(e) { 
+            e.preventDefault(); e.stopPropagation(); 
+            dragging = true; moved = false; 
+            const cx = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX; 
+            const cy = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY; 
+            sx = cx; sy = cy; 
+            so.l = masterMenuBtn.offsetLeft; so.t = masterMenuBtn.offsetTop; 
+            masterMenuBtn.style.transition = 'none'; 
+        }
+        
+        function move(e) { 
+            if (!dragging) return; 
+            e.preventDefault(); 
+            const cx = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX; 
+            const cy = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY; 
+            const dx = cx - sx, dy = cy - sy; 
+            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) moved = true; 
+            const mx = window.innerWidth - 44, my = window.innerHeight - 44; 
+            let nl = Math.max(12, Math.min(so.l + dx, mx)), nt = Math.max(12, Math.min(so.t + dy, my)); 
+            masterMenuBtn.style.left = nl + 'px'; masterMenuBtn.style.top = nt + 'px'; 
+        }
+        
+        function end() { 
+            if (dragging) { 
+                if (!moved) { 
+                    // ✅ Toggle master menu overlay visibility
+                    if (masterMenuOverlay.classList.contains('hidden')) {
+                        navigateToMasterMenu();
+                    } else {
+                        // If already open, just close it
+                        masterMenuOverlay.classList.add('hidden');
+                    }
+                } 
+                dragging = false; 
+                masterMenuBtn.style.transition = 'all 0.2s ease'; 
+            } 
+        }
+        
+        masterMenuBtn.addEventListener('mousedown', start); 
+        masterMenuBtn.addEventListener('touchstart', start, { passive: false });
+        document.addEventListener('mousemove', move); 
+        document.addEventListener('mouseup', end);
+        document.addEventListener('touchmove', move, { passive: false }); 
+        document.addEventListener('touchend', end); 
+        document.addEventListener('touchcancel', end);
     }
 
     function toggleSidebar() { if (!sidebar) return; sidebar.classList.toggle('hidden'); workspace.classList.toggle('expanded'); setTimeout(() => { canvas.calcOffset(); applyCanvasTransform(); }, 300); }
@@ -2947,6 +3090,8 @@
         if (window.innerWidth <= 767) { 
             masterSwitch.style.right = '16px'; 
             masterSwitch.style.bottom = 'calc(42px + env(safe-area-inset-bottom))'; 
+            masterMenuBtn.style.left = '16px'; 
+            masterMenuBtn.style.bottom = 'calc(42px + env(safe-area-inset-bottom))'; 
         }
     }
 
@@ -2962,6 +3107,7 @@
         setupCanvasHandle();
         setupZoomGestures();
         setupMasterSwitch();
+        setupMasterMenuBtn(); // ✅ Setup new master menu button
         setupTopbarSwipe();
         
         // Add pan listeners to canvas container for background panning
@@ -2976,9 +3122,21 @@
         if (isMobile) { 
             masterSwitch.style.right = '16px'; 
             masterSwitch.style.bottom = 'calc(42px + env(safe-area-inset-bottom))'; 
+            masterMenuBtn.style.left = '16px'; 
+            masterMenuBtn.style.bottom = 'calc(42px + env(safe-area-inset-bottom))'; 
         } else { 
             masterSwitch.style.right = '24px'; 
             masterSwitch.style.bottom = 'calc(48px + env(safe-area-inset-bottom))'; 
+            masterMenuBtn.style.left = '24px'; 
+            masterMenuBtn.style.bottom = 'calc(48px + env(safe-area-inset-bottom))'; 
+        }
+        
+        // ✅ FIXED: Initially hide master menu button when UI is visible (design app mode)
+        // Show it only when master menu is active or UI is hidden
+        if (isUIVisible && !masterMenuOverlay.classList.contains('hidden')) {
+            masterMenuBtn.classList.remove('hidden');
+        } else if (!isUIVisible) {
+            masterMenuBtn.classList.add('hidden');
         }
         
         window.addEventListener('resize', handleResize);
@@ -2988,11 +3146,16 @@
         updateCanvasInfo(); 
         updateObjectInfo();
         
-        console.log('✅ THESIGNNAL Platform: All features updated, mobile scrolling fixed, red ribbons removed');
+        console.log('✅ THESIGNNAL Platform: Master button fixed, mobile scrolling enabled, all menu items visible');
     });
 
-    // Prevent pull-to-refresh on canvas ONLY (allow topbar scroll)
+    // ✅ FIXED: Prevent pull-to-refresh ONLY on canvas (allow master menu scrolling)
     document.addEventListener('touchmove', e => { 
+        // Allow scrolling on master menu overlay
+        if (e.target.closest('#masterMenuOverlay')) {
+            return; // Let it scroll naturally
+        }
+        // Prevent pull-to-refresh only on canvas area
         if (e.target.closest('.canvas-container') && !e.target.closest('.topbar-scroll')) {
             e.preventDefault(); 
         }
