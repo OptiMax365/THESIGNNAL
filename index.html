@@ -676,29 +676,7 @@
             margin-top: 10px;
         }
         
-        /* =========================
-           DESIGN APP BACK BUTTON
-           ========================= */
-        #backToMasterBtn {
-            position: fixed;
-            top: calc(16px + env(safe-area-inset-top));
-            left: 16px;
-            z-index: 10000;
-            background: linear-gradient(135deg, #025f3b, #037a4d);
-            color: white;
-            border: none;
-            border-radius: 16px;
-            padding: 10px 20px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            display: none;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.2);
-            transition: all 0.2s ease;
-            min-height: 40px;
-        }
+
         
         #backToMasterBtn.visible {
             display: flex;
@@ -917,26 +895,7 @@
             font-size: 1.2rem;
         }
         
-        .browser-back-btn {
-            position: fixed;
-            top: calc(16px + env(safe-area-inset-top));
-            right: 16px;
-            z-index: 10000;
-            background: linear-gradient(135deg, #025f3b, #037a4d);
-            color: white;
-            border: none;
-            border-radius: 16px;
-            padding: 10px 20px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            display: none;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.2);
-            transition: all 0.2s ease;
-            min-height: 40px;
-        }
+
         
         .browser-back-btn.visible {
             display: flex;
@@ -1571,9 +1530,7 @@
         </div>
     </div>
     
-    <button class="browser-back-btn" id="browserBackBtn" onclick="navigateToMasterMenu()">
-        <span>←</span> Master Menu
-    </button>
+
     
     <!-- =========================
          DESIGN APP (EXISTING CODE - UNCHANGED FUNCTIONALITY)
@@ -1754,10 +1711,7 @@
         <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
     </div>
     
-    <!-- BACK TO MASTER BUTTON (for Design App) -->
-    <button id="backToMasterBtn" onclick="navigateToMasterMenu()">
-        <span>←</span> Master Menu
-    </button>
+
 
     <input type="file" id="imageInput" accept="image/*" style="display:none">
 
@@ -1841,11 +1795,9 @@
     const imageInput = document.getElementById('imageInput');
     const topbarScroll = document.getElementById('topbarScroll');
     const masterMenuOverlay = document.getElementById('masterMenuOverlay');
-    const backToMasterBtn = document.getElementById('backToMasterBtn');
     const userGreeting = document.getElementById('userGreeting');
     const greetingName = document.getElementById('greetingName');
     const browserApp = document.getElementById('browserApp');
-    const browserBackBtn = document.getElementById('browserBackBtn');
     const browserTabsContainer = document.getElementById('browserTabs');
     const browserIframeContainer = document.getElementById('browserIframeContainer');
     const browserUrlInput = document.getElementById('browserUrlInput');
@@ -2128,7 +2080,7 @@
         topbar.classList.add('hidden');
         sidebar?.classList.add('hidden');
         statusbar.classList.add('hidden');
-        backToMasterBtn.classList.remove('visible');
+
         browserApp.classList.remove('active');
         browserBackBtn.classList.remove('visible');
         
