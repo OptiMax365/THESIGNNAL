@@ -679,7 +679,26 @@
         /* =========================
            DESIGN APP BACK BUTTON
            ========================= */
-
+        #backToMasterBtn {
+            position: fixed;
+            top: calc(16px + env(safe-area-inset-top));
+            left: 16px;
+            z-index: 10000;
+            background: linear-gradient(135deg, #025f3b, #037a4d);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 10px 20px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+            min-height: 40px;
+        }
         
         #backToMasterBtn.visible {
             display: flex;
@@ -898,7 +917,26 @@
             font-size: 1.2rem;
         }
         
-
+        .browser-back-btn {
+            position: fixed;
+            top: calc(16px + env(safe-area-inset-top));
+            right: 16px;
+            z-index: 10000;
+            background: linear-gradient(135deg, #025f3b, #037a4d);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 10px 20px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+            min-height: 40px;
+        }
         
         .browser-back-btn.visible {
             display: flex;
@@ -1200,10 +1238,15 @@
             <div class="master-subtitle">Your all-in-one creative platform for design, social, AI tools, and more. Sign in to unlock your personalized experience.</div>
         </div>
         
-        <div class="auth-buttons">
-            <button class="auth-btn signup-btn" onclick="openModal('signupModal')">Sign Up</button>
-            <button class="auth-btn signin-btn" onclick="openModal('signinModal')">Sign In</button>
+
+
+        <div class="auth-buttons" style="display: none;">
+        <button class="auth-btn signup-btn" onclick="openModal('signupModal')">Sign Up</button>
+        <button class="auth-btn signin-btn" onclick="openModal('signinModal')">Sign In</button>
         </div>
+
+
+
         
         <div class="user-greeting" id="userGreeting" onclick="openProfile()">
             Welcome back, <span id="greetingName">User</span>! ✨ <span style="margin-left:8px;font-size:0.9em">👤 View Profile</span>
@@ -1528,7 +1571,9 @@
         </div>
     </div>
     
-
+    <button class="browser-back-btn" id="browserBackBtn" onclick="navigateToMasterMenu()">
+        <span>←</span> Master Menu
+    </button>
     
     <!-- =========================
          DESIGN APP (EXISTING CODE - UNCHANGED FUNCTIONALITY)
@@ -1710,7 +1755,9 @@
     </div>
     
     <!-- BACK TO MASTER BUTTON (for Design App) -->
- 
+    <button id="backToMasterBtn" onclick="navigateToMasterMenu()">
+        <span>←</span> Master Menu
+    </button>
 
     <input type="file" id="imageInput" accept="image/*" style="display:none">
 
@@ -1794,9 +1841,11 @@
     const imageInput = document.getElementById('imageInput');
     const topbarScroll = document.getElementById('topbarScroll');
     const masterMenuOverlay = document.getElementById('masterMenuOverlay');
+    const backToMasterBtn = document.getElementById('backToMasterBtn');
     const userGreeting = document.getElementById('userGreeting');
     const greetingName = document.getElementById('greetingName');
     const browserApp = document.getElementById('browserApp');
+    const browserBackBtn = document.getElementById('browserBackBtn');
     const browserTabsContainer = document.getElementById('browserTabs');
     const browserIframeContainer = document.getElementById('browserIframeContainer');
     const browserUrlInput = document.getElementById('browserUrlInput');
@@ -2079,7 +2128,9 @@
         topbar.classList.add('hidden');
         sidebar?.classList.add('hidden');
         statusbar.classList.add('hidden');
+        backToMasterBtn.classList.remove('visible');
         browserApp.classList.remove('active');
+        browserBackBtn.classList.remove('visible');
         
         // Show master menu
         masterMenuOverlay.classList.remove('hidden');
@@ -2094,14 +2145,15 @@
         }
     }
     
+
+
+
     function navigateToApp(appName) {
-        if (appName === 'design') {
-            // Check if user is logged in for design app
-            if (!currentUser) {
-                alert('Please sign in to use the Design Studio');
-                openModal('signinModal');
-                return;
-            }
+    if (appName === 'design') {
+        // ✅ ALLOW GUEST ACCESS: Removed login requirement
+        masterMenuOverlay.classList.add('hidden');
+
+        
             
             // Hide master menu
             masterMenuOverlay.classList.add('hidden');
@@ -2113,6 +2165,7 @@
                 workspace.classList.remove('expanded');
             }
             statusbar.classList.remove('hidden');
+            backToMasterBtn.classList.add('visible');
             
             // Resume canvas interactions
             canvas.selection = true;
@@ -2129,6 +2182,7 @@
             // Open the built-in browser
             masterMenuOverlay.classList.add('hidden');
             browserApp.classList.add('active');
+            browserBackBtn.classList.add('visible');
             
             // Initialize browser if first time
             if (browserTabs.length === 0) {
@@ -2217,17 +2271,20 @@
         document.getElementById('nextLaunchDate').textContent = nextLaunch.toLocaleDateString('en-US', options);
     }
     
+
+
     function notifyMe() {
-        if (!currentUser) {
-            alert('Please sign in to receive launch notifications');
-            openModal('signinModal');
-            return;
-        }
-        
-        alert(`🔔 You'll be notified when ${document.getElementById('comingSoonTitle').textContent} launches! Check your profile for updates.`);
+        // ✅ ALLOW GUEST ACCESS: Removed login requirement
+        const msg = currentUser 
+            ? `🔔 You'll be notified when ${document.getElementById('comingSoonTitle').textContent} launches!` 
+            : `🔔 Noted! We'll keep you updated on ${document.getElementById('comingSoonTitle').textContent}.`;
+        alert(msg);
         closeModal('comingSoonModal');
     }
-    
+
+
+
+
     // =========================
     // ✅ BROWSER FUNCTIONALITY
     // =========================
@@ -2429,6 +2486,7 @@
     
     function closeBrowserApp() {
         browserApp.classList.remove('active');
+        browserBackBtn.classList.remove('visible');
         masterMenuOverlay.classList.remove('hidden');
     }
     
