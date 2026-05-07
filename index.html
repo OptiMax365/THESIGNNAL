@@ -1184,6 +1184,42 @@
                 margin: 8px 8px 0;
                 max-width: 100%;
             }
+
+            /* =========================
+            FEATURE PREVIEW & PINK SWITCH
+            ========================= */
+/* =========================
+FEATURE PREVIEW & PINK SWITCH
+========================= */
+            #featurePreviewOverlay {
+            display: none;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;   /* Forces full viewport width */
+            height: 100vh !important;  /* Forces full viewport height */
+            background: #000;
+            z-index: 1000005 !important; /* MUST be higher than Master Menu (999999) & Modals (1000000) */
+            flex-direction: column;
+            animation: fadeIn 0.3s ease;
+            }
+            #featurePreviewOverlay.active {
+            display: flex !important;
+            }
+            #pinkBackSwitch:active {
+            transform: scale(0.95);
+            }
+            #comingSoonLinkBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,214,122,0.4);
+            }
+            @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+            }
+
+
+
         }
     </style>
 </head>
@@ -1335,6 +1371,90 @@
                 <div class="menu-icon">🚀</div>
                 <div>SPACE HABITAT</div>
             </div>
+
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('POSSIBILITY DATA', 'possibilitydata')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">📡</div>
+                <div>POSSIBILITY DATA</div>
+            </div>
+
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('CONTENT BET', 'contentbet')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">💸</div>
+                <div>CONTENT BET</div>
+            </div>
+
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('ORDER BET', 'orderbet')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">📦</div>
+                <div>ORDER BET</div>
+            </div>
+
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('I WIN WORD BET', 'iwinwordbet')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">🧠</div>
+                <div>I WIN WORD BET</div>
+            </div>
+
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('TECH BET', 'techbet')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">💻</div>
+                <div>TECH BET</div>
+            </div>
+
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('GUI BET', 'guibet')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">🖥️</div>
+                <div>GUI BET</div>
+            </div>
+
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('FLYING SHOE', 'flyingshoe')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">👟</div>
+                <div>FLYING SHOE</div>
+            </div>
+
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('WEBSITE SOCIAL MEDIA', 'websitesocialmedia')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">🌐</div>
+                <div>WEBSITE SOCIAL MEDIA</div>
+            </div>
+
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('SOCIAL MEDIA ALTERNATE', 'socialmediaalternate')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">🔄</div>
+                <div>SOCIAL MEDIA ALTERNATE</div>
+            </div>
+
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('SPOTLIGHT FLIGHT TECH', 'spotlightflighttech')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">🚀</div>
+                <div>SPOTLIGHT FLIGHT TECH</div>
+            </div>
+
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('ROBOT PORN', 'robotporn')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">🤖</div>
+                <div>ROBOT PORN</div>
+            </div>
+
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('NATURE SOCIAL MEDIA', 'naturesocialmedia')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">🌿</div>
+                <div>NATURE SOCIAL MEDIA</div>
+            </div>
+
+            <div class="master-menu-item coming-soon" onclick="showComingSoon('PRODUCT METRICS', 'productsmetrics')">
+                <div class="wifi-indicator"></div>
+                <div class="menu-icon">📊</div>
+                <div>PRODUCT METRICS</div>
+            </div>
+
+
+
+
+
+
         </div>
         
         <div class="master-footer">
@@ -1430,6 +1550,9 @@
                 </div>
             </div>
             
+
+
+
             <!-- Profile Edit Mode -->
             <div class="profile-form" id="profileForm">
                 <div class="form-group">
@@ -1490,6 +1613,24 @@
                     </div>
                 </div>
                 
+
+                <!-- 🔗 COMING SOON LINK CONTAINER -->
+                <div id="comingSoonLinkContainer" style="display:none; margin: 15px 0 10px;">
+                <button id="comingSoonLinkBtn" class="modal-btn" style="background: linear-gradient(135deg, #00d67a, #00b366);">🔗 Open Live Preview</button>
+                </div>
+
+                <!-- 📱 FEATURE PREVIEW OVERLAY (Add this right before </body> or after #comingSoonModal) -->
+                <div id="featurePreviewOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:999995; flex-direction:column;">
+                <div style="background: linear-gradient(135deg, #ff6b9d, #e84393); padding: 12px 16px; display:flex; align-items:center; justify-content:space-between; color:white; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                    <span id="previewTitle" style="font-weight:600; font-size:1rem;">Loading App...</span>
+                    <!-- PINK SWITCH / BACK BUTTON -->
+                    <button id="pinkBackSwitch" onclick="closeFeaturePreview()" style="background:white; color:#e84393; border:none; padding:8px 18px; border-radius:24px; font-weight:700; cursor:pointer; box-shadow: 0 3px 10px rgba(0,0,0,0.2); transition: transform 0.15s;">← BACK TO MASTER</button>
+                </div>
+                <iframe id="featurePreviewIframe" style="width:100%; flex:1; border:none; background:white;" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals"></iframe>
+                </div>
+
+
+
                 <button class="modal-btn notify-btn" onclick="notifyMe()">🔔 Notify Me When Ready</button>
             </div>
         </div>
@@ -1766,8 +1907,43 @@
         'idea-per-seconds': 'Capture, organize, and develop your creative ideas with our rapid ideation platform.',
         'pilot-drive': 'Navigate your projects with precision using our advanced project management and automation tools.',
         'human-4-1': 'Explore the future of human enhancement with cutting-edge bio-tech and wellness innovations.',
-        'space-habitat': 'Design and simulate sustainable living spaces for Earth and beyond with our space architecture tools.'
-    };
+        'space-habitat': 'Design and simulate sustainable living spaces for Earth and beyond with our space architecture tools.',
+        'possibilitydata': 'Transfer files between laptop, mobile phone, or any connected devices seamlessly.',
+        'contentbet': 'Bet on content outcomes and predictions within the platform ecosystem.',
+        'orderbet': 'Bet on order sequences to win structured or “magic” order outcomes.',
+        'iwinwordbet': 'Bet on the intensity, rarity, or value of words to win rewards.',
+        'techbet': 'Bet on technology outcomes, innovations, or system predictions.',
+        'guibet': 'Bet on user interface (GUI) interactions, designs, or visual system performance.',
+        'flyingshoe': 'Conceptual fashion-tech item representing motion-based or futuristic footwear design.',
+        'websitesocialmedia': 'Integrated system for managing websites and social media platforms together.',
+        'socialmediaalternate': 'Alternative social media system focused on decentralized or experimental interaction models.',
+        'spotlightflighttech': 'Advanced showcase technology combining spotlight effects with motion/flight-based display systems.',
+        'robotporn': 'AI-generated or robotic visual content simulation systems (experimental media concept).',
+        'naturesocialmedia': 'Nature-inspired social platform focusing on organic, environmental, and outdoor content sharing.',
+        'productsmetrics': 'System for tracking product performance, analytics, and usage metrics across platforms.'
+            
+};
+
+
+
+
+        // 🔗 FEATURE LINKS CONFIGURATION (Add your actual app URLs here)
+        const featureLinks = {
+        'shop': 'https://example.com/shop',
+        'social': 'https://example.com/social',
+        'ai-search': 'https://example.com/ai-search',
+        'image-creation': 'https://example.com/image-gen',
+        'video-creation': 'https://example.com/video-editor',
+        'browser': 'https://example.com/browser',
+        'possibilitydata': 'https://optimax365.github.io/SIGNALPOSSIBILITY/'
+        // Add more as you build each app
+        };
+
+
+
+
+
+
     
     // Canvas setup
     const canvas = new fabric.Canvas('designCanvas', {
@@ -2144,39 +2320,65 @@
     }
     
     function showComingSoon(featureName, featureKey) {
-        // Set modal content
-        document.getElementById('comingSoonTitle').textContent = featureName;
-        document.getElementById('comingSoonDesc').textContent = featureDescriptions[featureKey] || 'This feature is currently in development and will be available soon.';
-        
-        // Set icon based on feature
-        const icons = {
-            'shop': '🛍️', 'social': '💬', 'ai-search': '🔍', 'iwinwordbet': '🎰',
-            'image-creation': '🖼️', 'video-creation': '🎬', 'app-script': '📜',
-            'gift': '🎁', 'fundprojects': '💰', 'name-generator': '🏷️',
-            'product-maker': '🛠️', 'robot-planet': '🤖', 'free-beats': '🎵',
-            'free-images': '🖼️', 'free-videos': '🎬', 'ceo-brands': '🏢',
-            'singles-personal': '💕', 'internet-calling': '📞', 'text-message': '💬',
-            'idea-per-seconds': '💡', 'pilot-drive': '✈️', 'human-4-1': '🧬',
-            'space-habitat': '🚀'
-        };
-        document.getElementById('comingSoonIcon').textContent = icons[featureKey] || '🚀';
-        
-        // Calculate launch date (2 months from today)
-        const today = new Date();
-        const launchDate = new Date();
-        launchDate.setMonth(today.getMonth() + 2);
-        currentFeatureLaunchDate = launchDate;
-        
-        // Update launch date display
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        document.getElementById('launchDateDisplay').textContent = launchDate.toLocaleDateString('en-US', options);
-        
-        // Start countdown
-        startCountdown(launchDate);
-        
-        // Show modal
-        openModal('comingSoonModal');
+    document.getElementById('comingSoonTitle').textContent = featureName;
+    document.getElementById('comingSoonDesc').textContent = featureDescriptions[featureKey] || 'This feature is currently in development.';
+    
+    const icons = {
+        'shop': '🛍️', 'social': '💬', 'ai-search': '🔍', 'iwinwordbet': '🎰',
+        'image-creation': '🖼️', 'video-creation': '🎬', 'app-script': '📜',
+        'gift': '🎁', 'fundprojects': '💰', 'name-generator': '🏷️',
+        'product-maker': '🛠️', 'robot-planet': '🤖', 'free-beats': '🎵',
+        'free-images': '🖼️', 'free-videos': '🎬', 'ceo-brands': '🏢',
+        'singles-personal': '💕', 'internet-calling': '📞', 'text-message': '💬',
+        'idea-per-seconds': '💡', 'pilot-drive': '✈️', 'human-4-1': '🧬',
+        'space-habitat': '🚀'
+    };
+    document.getElementById('comingSoonIcon').textContent = icons[featureKey] || '🚀';
+
+    // ✅ SHOW/HIDE LINK BUTTON BASED ON URL CONFIG
+    const linkContainer = document.getElementById('comingSoonLinkContainer');
+    const linkBtn = document.getElementById('comingSoonLinkBtn');
+    if (featureLinks[featureKey]) {
+        linkContainer.style.display = 'block';
+        linkBtn.onclick = () => openFeaturePreview(featureLinks[featureKey], featureName);
+    } else {
+        linkContainer.style.display = 'none';
     }
+
+    // Timer Setup
+    const today = new Date();
+    const launchDate = new Date();
+    launchDate.setMonth(today.getMonth() + 2);
+    currentFeatureLaunchDate = launchDate;
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('launchDateDisplay').textContent = launchDate.toLocaleDateString('en-US', options);
+    startCountdown(launchDate);
+    openModal('comingSoonModal');
+    }
+
+
+    // 🖼️ OPEN FEATURE PREVIEW (In-Page Iframe)
+    function openFeaturePreview(url, title) {
+    closeModal('comingSoonModal');
+    const overlay = document.getElementById('featurePreviewOverlay');
+    overlay.style.display = 'flex';
+    overlay.classList.add('active');
+    document.getElementById('previewTitle').textContent = title;
+    document.getElementById('featurePreviewIframe').src = url;
+    document.body.style.overflow = 'hidden'; // Lock background scroll
+    }
+
+    // 🔄 PINK SWITCH: CLOSE PREVIEW & RETURN TO MASTER MENU
+    function closeFeaturePreview() {
+    const overlay = document.getElementById('featurePreviewOverlay');
+    overlay.classList.remove('active');
+    overlay.style.display = 'none';
+    document.getElementById('featurePreviewIframe').src = ''; // Stop audio/video
+    document.body.style.overflow = '';
+    // Navigate back to master main menu as requested
+    navigateToMasterMenu();
+    }
+
     
     function startCountdown(launchDate) {
         // Clear any existing interval
@@ -2943,55 +3145,87 @@
     // =========================
     // ✅ NEW: MASTER MENU BUTTON (Bottom Left - Small, Blinking, Draggable)
     // =========================
+
+    
+
+
+
+
+
+
+    // =========================
+    // ✅ NEW: MASTER MENU BUTTON (Bottom Left - Small, Blinking, Draggable)
+    // =========================
     function setupMasterMenuBtn() {
         let dragging = false, moved = false, sx = 0, sy = 0, so = { l: 0, t: 0 };
         
-        function start(e) { 
-            e.preventDefault(); e.stopPropagation(); 
-            dragging = true; moved = false; 
-            const cx = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX; 
-            const cy = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY; 
-            sx = cx; sy = cy; 
-            so.l = masterMenuBtn.offsetLeft; so.t = masterMenuBtn.offsetTop; 
-            masterMenuBtn.style.transition = 'none'; 
+        function start(e) {
+            dragging = true; 
+            moved = false;
+            const cx = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+            const cy = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+            sx = cx; sy = cy;
+            so.l = masterMenuBtn.offsetLeft; so.t = masterMenuBtn.offsetTop;
+            masterMenuBtn.style.transition = 'none';
         }
         
-        function move(e) { 
-            if (!dragging) return; 
-            e.preventDefault(); 
-            const cx = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX; 
-            const cy = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY; 
-            const dx = cx - sx, dy = cy - sy; 
-            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) moved = true; 
-            const mx = window.innerWidth - 44, my = window.innerHeight - 44; 
-            let nl = Math.max(12, Math.min(so.l + dx, mx)), nt = Math.max(12, Math.min(so.t + dy, my)); 
-            masterMenuBtn.style.left = nl + 'px'; masterMenuBtn.style.top = nt + 'px'; 
+        function move(e) {
+            if (!dragging) return;
+            const cx = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            const cy = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+            const dx = cx - sx, dy = cy - sy;
+            
+            // Only trigger drag behavior after moving past a 5px threshold
+            if (!moved && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+                moved = true;
+                if (e.cancelable) e.preventDefault();
+            }
+            
+            if (moved) {
+                if (e.cancelable) e.preventDefault();
+                const mx = window.innerWidth - 44, my = window.innerHeight - 44;
+                let nl = Math.max(12, Math.min(so.l + dx, mx));
+                let nt = Math.max(12, Math.min(so.t + dy, my));
+                masterMenuBtn.style.left = nl + 'px'; 
+                masterMenuBtn.style.top = nt + 'px';
+            }
         }
         
-        function end() { 
-            if (dragging) { 
-                if (!moved) { 
-                    // ✅ Toggle master menu overlay visibility
+        function end() {
+            if (dragging) {
+                if (!moved) {
                     if (masterMenuOverlay.classList.contains('hidden')) {
                         navigateToMasterMenu();
                     } else {
-                        // If already open, just close it
                         masterMenuOverlay.classList.add('hidden');
                     }
-                } 
-                dragging = false; 
-                masterMenuBtn.style.transition = 'all 0.2s ease'; 
-            } 
+                }
+                dragging = false;
+                masterMenuBtn.style.transition = 'all 0.2s ease';
+            }
         }
         
-        masterMenuBtn.addEventListener('mousedown', start); 
+        masterMenuBtn.addEventListener('mousedown', start);
         masterMenuBtn.addEventListener('touchstart', start, { passive: false });
-        document.addEventListener('mousemove', move); 
+        document.addEventListener('mousemove', move);
         document.addEventListener('mouseup', end);
-        document.addEventListener('touchmove', move, { passive: false }); 
-        document.addEventListener('touchend', end); 
+        document.addEventListener('touchmove', move, { passive: false });
+        document.addEventListener('touchend', end);
         document.addEventListener('touchcancel', end);
     }
+
+
+
+
+
+
+
+
+    
+
+
+
+    
 
     function toggleSidebar() { if (!sidebar) return; sidebar.classList.toggle('hidden'); workspace.classList.toggle('expanded'); setTimeout(() => { canvas.calcOffset(); applyCanvasTransform(); }, 300); }
 
