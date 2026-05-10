@@ -174,11 +174,11 @@ body{
 
 <div class="master-menucontainer">
 
-    <div class="menu-card"
-    onclick="openWebsite('https://optimax365.github.io/HigherProtocol/')">
+    <!-- QUOTES APP -->
+    <div class="menu-card" onclick="openStandaloneApp('QuotesProtocols.html')">
         <div class="menu-icon">🎨</div>
         <div class="menu-title">
-            Design 2D
+            Quotes Protocols
         </div>
 
     </div>
@@ -287,49 +287,27 @@ body{
     </div>
 
 
-<!-- =========================================
-     WEBSITE MODAL
-========================================= -->
-
-<div class="website-modal" id="websiteModal">
-    <!-- CLOSE BUTTON -->
-    <button class="close-modal" onclick="closeWebsite()">
-        Close
-    </button>
-
-    <!-- WEBSITE FRAME -->
-    <iframe
-        class="website-frame"
-        id="websiteFrame"
-        src="">
-    </iframe>
-
-</div>
-
-
-
     
 <script>
 
-/* OPEN WEBSITE */
-function openWebsite(url){
+/* =========================================
+   OPEN STANDALONE APP
+========================================= */
 
-    document.getElementById("websiteModal").style.display = "flex";
+async function openStandaloneApp(file){
 
-    document.getElementById("websiteFrame").src = url;
+    let response = await fetch(file);
 
-}
+    let html = await response.text();
 
+    document.open();
+    
+    document.write(html);
 
-
-/* CLOSE WEBSITE */
-function closeWebsite(){
-
-    document.getElementById("websiteModal").style.display = "none";
-
-    document.getElementById("websiteFrame").src = "";
+    document.close();
 
 }
+
 
 </script>
 

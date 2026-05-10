@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Quotes Protocols</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    background:#0f1117;
+    font-family:Arial,sans-serif;
+    overflow-x:hidden;
+    color:white;
+}
+
+/* ========================================
+   TOP BAR
+======================================== */
+
+.topbar{
+
+    width:100%;
+
+    height:65px;
+
+    background:#111827;
+
+    display:flex;
+
+    align-items:center;
+
+    padding:0 20px;
+
+    position:sticky;
+
+    top:0;
+
+    z-index:999;
+
+    box-shadow:0 0 20px rgba(0,0,0,0.4);
+
+}
+
+.back-btn{
+
+    border:none;
+
+    background:#00c3ff;
+
+    color:white;
+
+    padding:12px 20px;
+
+    border-radius:12px;
+
+    font-size:1rem;
+
+    cursor:pointer;
+
+    font-weight:bold;
+
+}
+
+/* ========================================
+   MAIN APP
+======================================== */
+
+.app{
+    width:100%;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:20px;
+    gap:25px;
+}
+
+/* ========================================
+   MOTION AREA
+======================================== */
+
+.motion-area{
+    width:100%;
+    max-width:900px;
+    height:420px;
+    position:relative;
+    overflow:hidden;
+    border-radius:30px;
+    background:linear-gradient(135deg,#151925,#23293a);
+    box-shadow:0 0 40px rgba(0,0,0,0.5);
+}
+
+/* ========================================
+   QUOTE CARD
+======================================== */
+
+.quote-card{
+    width:320px;
+    min-height:220px;
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    border-radius:30px;
+    padding:30px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    backdrop-filter:blur(15px);
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.12);
+    animation:floatCard 6s ease-in-out infinite;
+}
+
+.quote{
+    font-size:1.3rem;
+    line-height:1.6;
+    font-weight:bold;
+}
+
+.author{
+    margin-top:20px;
+    font-size:0.95rem;
+    opacity:0.8;
+}
+
+/* ========================================
+   ANIMATION
+======================================== */
+
+@keyframes floatCard{
+
+    0%{
+        transform:translate(-50%,-50%) translateY(0px) rotate(-2deg);
+    }
+
+    25%{
+        transform:translate(-50%,-50%) translateY(-10px) rotate(2deg);
+    }
+
+    50%{
+        transform:translate(-50%,-50%) translateY(0px) rotate(-2deg);
+    }
+
+    75%{
+        transform:translate(-50%,-50%) translateY(10px) rotate(2deg);
+    }
+
+    100%{
+        transform:translate(-50%,-50%) translateY(0px) rotate(-2deg);
+    }
+
+}
+
+/* ========================================
+   GLOWS
+======================================== */
+
+.glow{
+    position:absolute;
+    border-radius:50%;
+    filter:blur(50px);
+    opacity:0.5;
+}
+
+.glow1{
+    width:220px;
+    height:220px;
+    background:#ff0080;
+    top:-40px;
+    left:-40px;
+}
+
+.glow2{
+    width:240px;
+    height:240px;
+    background:#00c3ff;
+    bottom:-60px;
+    right:-60px;
+}
+
+/* ========================================
+   EDITOR
+======================================== */
+
+.editor{
+    width:100%;
+    max-width:900px;
+    background:#171c28;
+    padding:20px;
+    border-radius:25px;
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+}
+
+textarea,
+input{
+    width:100%;
+    border:none;
+    outline:none;
+    border-radius:15px;
+    padding:15px;
+    background:#232a3d;
+    color:white;
+    font-size:1rem;
+}
+
+textarea{
+    min-height:120px;
+    resize:none;
+}
+
+.controls{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+}
+
+button{
+    border:none;
+    border-radius:15px;
+    padding:15px;
+    cursor:pointer;
+    font-size:1rem;
+    font-weight:bold;
+}
+
+.generate-btn{
+    background:#00c3ff;
+    color:white;
+}
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media(max-width:700px){
+
+    .motion-area{
+        height:380px;
+    }
+
+    .quote-card{
+        width:90%;
+        min-height:200px;
+        padding:25px;
+    }
+
+    .quote{
+        font-size:1.1rem;
+    }
+
+    .controls{
+        flex-direction:column;
+    }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- TOP BAR -->
+
+<div class="topbar">
+
+    <button class="back-btn"
+    onclick="goBack()">
+        ← Back
+    </button>
+
+</div>
+
+<div class="app">
+
+    <!-- MOTION CARD -->
+
+    <div class="motion-area">
+
+        <div class="glow glow1"></div>
+
+        <div class="glow glow2"></div>
+
+        <div class="quote-card">
+
+            <div class="quote" id="quoteText">
+                “Dream big. Start small. Act now.”
+            </div>
+
+            <div class="author" id="authorText">
+                — Motion Quotes
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- EDITOR -->
+
+    <div class="editor">
+
+        <textarea
+        id="quoteInput"
+        placeholder="Write your quote here..."></textarea>
+
+        <input
+        type="text"
+        id="authorInput"
+        placeholder="Author name...">
+
+        <div class="controls">
+
+            <button
+            class="generate-btn"
+            onclick="updateCard()">
+                Update Card
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+/* ========================================
+   QUOTES
+======================================== */
+
+const quotes = [
+
+{
+    quote:"Dream big. Start small. Act now.",
+    author:"Motion Quotes"
+},
+
+{
+    quote:"Your future is built daily.",
+    author:"Creative Mind"
+},
+
+{
+    quote:"Consistency creates greatness.",
+    author:"Focus Studio"
+},
+
+{
+    quote:"The best designs move emotions.",
+    author:"Visual Motion"
+}
+
+];
+
+/* ========================================
+   AUTO QUOTES
+======================================== */
+
+let currentIndex = 0;
+
+function autoQuotes(){
+
+    currentIndex++;
+
+    if(currentIndex >= quotes.length){
+        currentIndex = 0;
+    }
+
+    document.getElementById("quoteText").innerHTML =
+    "“" + quotes[currentIndex].quote + "”";
+
+    document.getElementById("authorText").innerHTML =
+    "— " + quotes[currentIndex].author;
+
+}
+
+setInterval(autoQuotes,4000);
+
+/* ========================================
+   UPDATE CARD
+======================================== */
+
+function updateCard(){
+
+    let quote =
+    document.getElementById("quoteInput").value;
+
+    let author =
+    document.getElementById("authorInput").value;
+
+    if(quote.trim() !== ""){
+
+        document.getElementById("quoteText").innerHTML =
+        "“" + quote + "”";
+
+    }
+
+    if(author.trim() !== ""){
+
+        document.getElementById("authorText").innerHTML =
+        "— " + author;
+
+    }
+
+}
+
+/* ========================================
+   BACK TO MENU
+======================================== */
+
+async function goBack(){
+
+    let response = await fetch("index.html");
+
+    let html = await response.text();
+
+    document.open();
+
+    document.write(html);
+
+    document.close();
+
+}
+
+
+
+
+</script>
+
+</body>
+</html>
